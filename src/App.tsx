@@ -53,7 +53,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       
-      <div className="flex-1 overflow-auto">
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${sidebarOpen ? "md:ml-60" : "md:ml-[60px]"}`}>
         <Navbar 
           toggleSidebar={toggleSidebar} 
           isSidebarOpen={sidebarOpen} 

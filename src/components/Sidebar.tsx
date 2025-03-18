@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
       transition: { duration: 0.3, ease: 'easeInOut' }
     },
     closed: { 
-      width: '0px',
+      width: '60px',
       transition: { duration: 0.3, ease: 'easeInOut' }
     }
   };
@@ -77,13 +77,13 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         animate={isOpen ? 'open' : 'closed'}
         initial={false}
         className={cn(
-          "fixed left-0 top-0 z-30 h-full flex-col border-r bg-sidebar text-sidebar-foreground md:w-60 md:translate-x-0 md:flex",
-          isOpen ? "flex w-60" : "hidden w-0 -translate-x-full md:flex md:w-auto md:min-w-[60px] md:max-w-[60px]",
+          "fixed left-0 top-0 z-20 h-full flex-col border-r bg-sidebar text-sidebar-foreground",
+          isOpen ? "flex w-60" : "hidden w-0 md:flex md:w-[60px]",
         )}
       >
         <div className="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="font-bold text-xl">BathStory</span>
+            <span className={cn("font-bold text-xl transition-opacity", !isOpen && "md:opacity-0")}>BathStory</span>
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto py-4">
