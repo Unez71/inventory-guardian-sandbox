@@ -1,175 +1,17 @@
 
+import { supabase } from "../integrations/supabase/client";
 import { User, Product, Category, Stats, InventoryItem, Purchase, Sale, Transfer, Vendor } from '../types';
-
-// Mock data for demo
-const MOCK_USERS: User[] = [
-  { id: 1, username: 'admin', email: 'admin@example.com', role: 'admin' },
-  { id: 2, username: 'user1', email: 'user1@example.com', role: 'user' },
-  { id: 3, username: 'user2', email: 'user2@example.com', role: 'user' },
-];
-
-const MOCK_CATEGORIES: Category[] = [
-  { id: 1, name: 'Glass Partitions', description: 'Partition systems for bathrooms', productsCount: 3, createdAt: '2023-01-15T10:00:00Z' },
-  { id: 2, name: 'Accessories', description: 'Bathroom fittings and accessories', productsCount: 1, createdAt: '2023-01-20T14:30:00Z' },
-];
-
-const MOCK_INVENTORY: InventoryItem[] = [
-  { 
-    id: 1, 
-    name: 'Frameless Glass Partition', 
-    description: '10mm tempered glass with hardware', 
-    location: 'bangalore', 
-    quantity: 50, 
-    unit: 'pieces', 
-    unitPrice: 1200, 
-    inStock: true 
-  },
-  { 
-    id: 2, 
-    name: 'Framed Glass Partition', 
-    description: '8mm tempered glass with aluminum frame', 
-    location: 'hyderabad', 
-    quantity: 25, 
-    unit: 'pieces', 
-    unitPrice: 900, 
-    inStock: true 
-  },
-  { 
-    id: 3, 
-    name: 'Glass Hardware Kit', 
-    description: 'Complete hardware set for glass partitions', 
-    location: 'bangalore', 
-    quantity: 0, 
-    unit: 'sets', 
-    unitPrice: 500, 
-    inStock: false 
-  },
-  { 
-    id: 4, 
-    name: 'Rubber Gaskets', 
-    description: 'Rubber gaskets for glass partitions', 
-    location: 'hyderabad', 
-    quantity: 0, 
-    unit: 'meters', 
-    unitPrice: 100, 
-    inStock: false 
-  },
-];
-
-const MOCK_PURCHASES: Purchase[] = [
-  {
-    id: 1,
-    invoiceNumber: 'PUR-001',
-    date: '2024-01-15T00:00:00Z',
-    vendorId: 1,
-    location: 'bangalore',
-    totalAmount: 136000,
-    items: [
-      { productId: 1, productName: 'Frameless Glass Partition', quantity: 100, unitPrice: 800, total: 80000 },
-      { productId: 2, productName: 'Framed Glass Partition', quantity: 80, unitPrice: 700, total: 56000 }
-    ]
-  },
-  {
-    id: 2,
-    invoiceNumber: 'PUR-002',
-    date: '2024-01-20T00:00:00Z',
-    vendorId: 1,
-    location: 'hyderabad',
-    totalAmount: 106000,
-    items: [
-      { productId: 1, productName: 'Frameless Glass Partition', quantity: 80, unitPrice: 800, total: 64000 },
-      { productId: 2, productName: 'Framed Glass Partition', quantity: 60, unitPrice: 700, total: 42000 }
-    ]
-  }
-];
-
-const MOCK_SALES: Sale[] = [
-  {
-    id: 1,
-    invoiceNumber: 'INV-001',
-    date: '2024-02-05T00:00:00Z',
-    customerName: 'John Doe',
-    customerPhone: '1234567890',
-    location: 'bangalore',
-    totalAmount: 58500,
-    items: [
-      { productName: 'Frameless Glass Partition - 30 pieces @ ₹1200', quantity: 30, unitPrice: 1200 },
-      { productName: 'Framed Glass Partition - 25 pieces @ ₹900', quantity: 25, unitPrice: 900 }
-    ]
-  },
-  {
-    id: 2,
-    invoiceNumber: 'INV-002',
-    date: '2024-02-08T00:00:00Z',
-    customerName: 'Alice Johnson',
-    customerPhone: '5555555555',
-    location: 'hyderabad',
-    totalAmount: 60000,
-    items: [
-      { productName: 'Frameless Glass Partition - 35 pieces @ ₹1200', quantity: 35, unitPrice: 1200 },
-      { productName: 'Framed Glass Partition - 20 pieces @ ₹900', quantity: 20, unitPrice: 900 }
-    ]
-  }
-];
-
-const MOCK_TRANSFERS: Transfer[] = [
-  {
-    id: 1,
-    productName: 'Frameless Glass Partition',
-    quantity: 10,
-    fromLocation: 'bangalore',
-    toLocation: 'hyderabad',
-    date: '2025-03-18T00:00:00Z',
-    status: 'completed'
-  },
-  {
-    id: 2,
-    productName: 'Framed Glass Partition',
-    quantity: 5,
-    fromLocation: 'hyderabad',
-    toLocation: 'bangalore',
-    date: '2025-03-18T00:00:00Z',
-    status: 'pending'
-  }
-];
-
-const MOCK_VENDORS: Vendor[] = [
-  {
-    id: 1,
-    name: 'Glass Solutions Pvt Ltd',
-    location: 'Bangalore, Karnataka',
-    phone: '9876543210',
-    email: 'info@glasssolutions.com'
-  },
-  {
-    id: 2,
-    name: 'Aluminum Frames Co',
-    location: 'Hyderabad, Telangana',
-    phone: '9876543211',
-    email: 'info@aluminumframes.com'
-  }
-];
-
-const MOCK_STATS: Stats = {
-  totalProducts: MOCK_INVENTORY.length,
-  totalCategories: MOCK_CATEGORIES.length,
-  totalUsers: MOCK_USERS.length,
-  lowStockItems: MOCK_INVENTORY.filter(p => p.quantity <= 5).length,
-  totalSales: 118500,
-  totalPurchases: 242000,
-  totalInventory: 210
-};
-
-// Simulate API delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Authentication functions
 export const loginApi = async (username: string, password: string) => {
-  await delay(800); // Simulate network request
-  
   // Simple validation for demo purposes
   if (username === 'admin' && password === 'password123') {
-    const user = MOCK_USERS.find(u => u.username === username);
+    const user = {
+      id: 1,
+      username: 'admin',
+      email: 'admin@example.com',
+      role: 'admin'
+    };
     return {
       user,
       token: 'mock-jwt-token',
@@ -180,160 +22,561 @@ export const loginApi = async (username: string, password: string) => {
 };
 
 export const logoutApi = async () => {
-  await delay(300);
   return { success: true };
 };
 
-// Data fetching functions
-export const fetchStats = async () => {
-  await delay(500);
-  return MOCK_STATS;
+// Fetch data from Supabase
+export const fetchCategories = async () => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*');
+  
+  if (error) throw error;
+  
+  // Transform to match our Category type
+  const categories: Category[] = data.map(cat => ({
+    id: cat.id,
+    name: cat.name,
+    description: cat.description || "",
+    productsCount: 0, // We'll update this count below
+    createdAt: cat.created_at
+  }));
+
+  // Get product counts for each category
+  for (let category of categories) {
+    const { count, error: countError } = await supabase
+      .from('inventory')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', category.id);
+    
+    if (!countError && count !== null) {
+      category.productsCount = count;
+    }
+  }
+  
+  return categories;
 };
 
 export const fetchInventory = async () => {
-  await delay(600);
-  return MOCK_INVENTORY;
-};
-
-export const fetchCategories = async () => {
-  await delay(400);
-  return MOCK_CATEGORIES;
-};
-
-export const fetchUsers = async () => {
-  await delay(500);
-  return MOCK_USERS;
-};
-
-export const fetchPurchases = async () => {
-  await delay(500);
-  return MOCK_PURCHASES;
-};
-
-export const fetchSales = async () => {
-  await delay(500);
-  return MOCK_SALES;
-};
-
-export const fetchTransfers = async () => {
-  await delay(400);
-  return MOCK_TRANSFERS;
+  const { data, error } = await supabase
+    .from('inventory')
+    .select('*');
+  
+  if (error) throw error;
+  
+  // Transform to match our InventoryItem type
+  const inventory: InventoryItem[] = data.map(item => ({
+    id: item.id,
+    name: item.name,
+    description: item.description || "",
+    location: item.location,
+    quantity: item.quantity,
+    unit: item.unit,
+    unitPrice: Number(item.unit_price),
+    inStock: item.quantity > 0
+  }));
+  
+  return inventory;
 };
 
 export const fetchVendors = async () => {
-  await delay(400);
-  return MOCK_VENDORS;
+  const { data, error } = await supabase
+    .from('vendors')
+    .select('*');
+  
+  if (error) throw error;
+  
+  // Transform to match our Vendor type
+  const vendors: Vendor[] = data.map(vendor => ({
+    id: vendor.id,
+    name: vendor.name,
+    location: vendor.location || "",
+    phone: vendor.phone || "",
+    email: vendor.email || ""
+  }));
+  
+  return vendors;
+};
+
+export const fetchPurchases = async () => {
+  const { data, error } = await supabase
+    .from('purchases')
+    .select(`
+      *,
+      purchase_items(*)
+    `);
+  
+  if (error) throw error;
+  
+  // Transform to match our Purchase type
+  const purchases: Purchase[] = await Promise.all(data.map(async (purchase) => {
+    // Get product names for each purchase item
+    const purchaseItems = await Promise.all(purchase.purchase_items.map(async (item: any) => {
+      const { data: productData } = await supabase
+        .from('inventory')
+        .select('name')
+        .eq('id', item.product_id)
+        .single();
+      
+      return {
+        productId: item.product_id,
+        productName: productData?.name || "Unknown Product",
+        quantity: item.quantity,
+        unitPrice: Number(item.unit_price),
+        total: Number(item.total)
+      };
+    }));
+    
+    return {
+      id: purchase.id,
+      invoiceNumber: purchase.invoice_number,
+      date: purchase.date,
+      vendorId: purchase.vendor_id,
+      location: purchase.location,
+      totalAmount: Number(purchase.total_amount),
+      items: purchaseItems
+    };
+  }));
+  
+  return purchases;
+};
+
+export const fetchSales = async () => {
+  const { data, error } = await supabase
+    .from('sales')
+    .select(`
+      *,
+      sale_items(*)
+    `);
+  
+  if (error) throw error;
+  
+  // Transform to match our Sale type
+  const sales: Sale[] = data.map(sale => ({
+    id: sale.id,
+    invoiceNumber: sale.invoice_number,
+    date: sale.date,
+    customerName: sale.customer_name,
+    customerPhone: sale.customer_phone || "",
+    location: sale.location,
+    totalAmount: Number(sale.total_amount),
+    items: sale.sale_items.map((item: any) => ({
+      productName: item.product_name,
+      quantity: item.quantity,
+      unitPrice: Number(item.unit_price)
+    }))
+  }));
+  
+  return sales;
+};
+
+export const fetchTransfers = async () => {
+  const { data, error } = await supabase
+    .from('transfers')
+    .select('*');
+  
+  if (error) throw error;
+  
+  // Transform to match our Transfer type
+  const transfers: Transfer[] = data.map(transfer => ({
+    id: transfer.id,
+    productName: transfer.product_name,
+    quantity: transfer.quantity,
+    fromLocation: transfer.from_location,
+    toLocation: transfer.to_location,
+    date: transfer.date,
+    status: transfer.status as 'completed' | 'pending'
+  }));
+  
+  return transfers;
+};
+
+export const fetchStats = async () => {
+  // Get total products (inventory items)
+  const { count: totalProducts } = await supabase
+    .from('inventory')
+    .select('*', { count: 'exact', head: true });
+  
+  // Get total categories
+  const { count: totalCategories } = await supabase
+    .from('categories')
+    .select('*', { count: 'exact', head: true });
+  
+  // Get low stock items
+  const { count: lowStockItems } = await supabase
+    .from('inventory')
+    .select('*', { count: 'exact', head: true })
+    .lt('quantity', 6);
+  
+  // Get total sales amount
+  const { data: salesData } = await supabase
+    .from('sales')
+    .select('total_amount');
+  
+  const totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
+  
+  // Get total purchases amount
+  const { data: purchasesData } = await supabase
+    .from('purchases')
+    .select('total_amount');
+  
+  const totalPurchases = purchasesData?.reduce((sum, purchase) => sum + Number(purchase.total_amount), 0) || 0;
+  
+  // Get total inventory quantity
+  const { data: inventoryData } = await supabase
+    .from('inventory')
+    .select('quantity');
+  
+  const totalInventory = inventoryData?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  
+  // Mock data for users (we don't have a users table yet)
+  const totalUsers = 3;
+  
+  const stats: Stats = {
+    totalProducts: totalProducts || 0,
+    totalCategories: totalCategories || 0,
+    totalUsers,
+    lowStockItems: lowStockItems || 0,
+    totalSales,
+    totalPurchases,
+    totalInventory
+  };
+  
+  return stats;
 };
 
 export const fetchItemById = async (id: number) => {
-  await delay(300);
-  const item = MOCK_INVENTORY.find(p => p.id === id);
-  if (!item) throw new Error('Item not found');
+  const { data, error } = await supabase
+    .from('inventory')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) throw error;
+  
+  // Transform to match our InventoryItem type
+  const item: InventoryItem = {
+    id: data.id,
+    name: data.name,
+    description: data.description || "",
+    location: data.location,
+    quantity: data.quantity,
+    unit: data.unit,
+    unitPrice: Number(data.unit_price),
+    inStock: data.quantity > 0
+  };
+  
   return item;
 };
 
 export const fetchCategoryById = async (id: number) => {
-  await delay(300);
-  const category = MOCK_CATEGORIES.find(c => c.id === id);
-  if (!category) throw new Error('Category not found');
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) throw error;
+  
+  // Get product count for this category
+  const { count, error: countError } = await supabase
+    .from('inventory')
+    .select('*', { count: 'exact', head: true })
+    .eq('category_id', data.id);
+  
+  // Transform to match our Category type
+  const category: Category = {
+    id: data.id,
+    name: data.name,
+    description: data.description || "",
+    productsCount: count || 0,
+    createdAt: data.created_at
+  };
+  
   return category;
 };
 
-// Data mutation functions (these would connect to an API in a real app)
+// Data mutation functions
 export const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
-  await delay(800);
+  const { data, error } = await supabase
+    .from('inventory')
+    .insert({
+      name: item.name,
+      description: item.description,
+      location: item.location,
+      quantity: item.quantity,
+      unit: item.unit,
+      unit_price: item.unitPrice,
+      category_id: null // We would need the category_id here
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  // Transform to match our InventoryItem type
   const newItem: InventoryItem = {
-    ...item,
-    id: Math.max(...MOCK_INVENTORY.map(p => p.id)) + 1,
+    id: data.id,
+    name: data.name,
+    description: data.description || "",
+    location: data.location,
+    quantity: data.quantity,
+    unit: data.unit,
+    unitPrice: Number(data.unit_price),
+    inStock: data.quantity > 0
   };
-  MOCK_INVENTORY.push(newItem);
+  
   return newItem;
 };
 
 export const updateInventoryItem = async (id: number, updates: Partial<InventoryItem>) => {
-  await delay(800);
-  const index = MOCK_INVENTORY.findIndex(p => p.id === id);
-  if (index === -1) throw new Error('Item not found');
+  const { data, error } = await supabase
+    .from('inventory')
+    .update({
+      name: updates.name,
+      description: updates.description,
+      location: updates.location,
+      quantity: updates.quantity,
+      unit: updates.unit,
+      unit_price: updates.unitPrice,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
   
-  MOCK_INVENTORY[index] = {
-    ...MOCK_INVENTORY[index],
-    ...updates,
+  if (error) throw error;
+  
+  // Transform to match our InventoryItem type
+  const updatedItem: InventoryItem = {
+    id: data.id,
+    name: data.name,
+    description: data.description || "",
+    location: data.location,
+    quantity: data.quantity,
+    unit: data.unit,
+    unitPrice: Number(data.unit_price),
+    inStock: data.quantity > 0
   };
   
-  return MOCK_INVENTORY[index];
+  return updatedItem;
 };
 
 export const deleteInventoryItem = async (id: number) => {
-  await delay(600);
-  const index = MOCK_INVENTORY.findIndex(p => p.id === id);
-  if (index === -1) throw new Error('Item not found');
+  const { error } = await supabase
+    .from('inventory')
+    .delete()
+    .eq('id', id);
   
-  MOCK_INVENTORY.splice(index, 1);
+  if (error) throw error;
+  
   return { success: true };
 };
 
 export const createPurchase = async (purchase: Omit<Purchase, 'id'>) => {
-  await delay(700);
-  const newPurchase: Purchase = {
+  // First, insert the purchase
+  const { data: purchaseData, error: purchaseError } = await supabase
+    .from('purchases')
+    .insert({
+      invoice_number: purchase.invoiceNumber,
+      date: purchase.date,
+      vendor_id: purchase.vendorId,
+      location: purchase.location,
+      total_amount: purchase.totalAmount
+    })
+    .select()
+    .single();
+  
+  if (purchaseError) throw purchaseError;
+  
+  // Then, insert each purchase item
+  for (const item of purchase.items) {
+    const { error: itemError } = await supabase
+      .from('purchase_items')
+      .insert({
+        purchase_id: purchaseData.id,
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        total: item.total
+      });
+    
+    if (itemError) throw itemError;
+    
+    // Update inventory quantity
+    const { error: updateError } = await supabase.rpc('update_inventory_quantity', {
+      p_product_id: item.productId,
+      p_quantity: item.quantity
+    });
+    
+    if (updateError) throw updateError;
+  }
+  
+  return {
     ...purchase,
-    id: Math.max(...MOCK_PURCHASES.map(p => p.id)) + 1,
+    id: purchaseData.id
   };
-  MOCK_PURCHASES.push(newPurchase);
-  return newPurchase;
 };
 
 export const createSale = async (sale: Omit<Sale, 'id'>) => {
-  await delay(700);
-  const newSale: Sale = {
+  // First, insert the sale
+  const { data: saleData, error: saleError } = await supabase
+    .from('sales')
+    .insert({
+      invoice_number: sale.invoiceNumber,
+      date: sale.date,
+      customer_name: sale.customerName,
+      customer_phone: sale.customerPhone,
+      location: sale.location,
+      total_amount: sale.totalAmount
+    })
+    .select()
+    .single();
+  
+  if (saleError) throw saleError;
+  
+  // Then, insert each sale item
+  for (const item of sale.items) {
+    const { error: itemError } = await supabase
+      .from('sale_items')
+      .insert({
+        sale_id: saleData.id,
+        product_name: item.productName,
+        quantity: item.quantity,
+        unit_price: item.unitPrice
+      });
+    
+    if (itemError) throw itemError;
+    
+    // Here we would normally update inventory quantity, but we need a product_id
+    // which we don't have in the current SaleItem type
+  }
+  
+  return {
     ...sale,
-    id: Math.max(...MOCK_SALES.map(s => s.id)) + 1,
+    id: saleData.id
   };
-  MOCK_SALES.push(newSale);
-  return newSale;
 };
 
 export const createTransfer = async (transfer: Omit<Transfer, 'id'>) => {
-  await delay(500);
+  const { data, error } = await supabase
+    .from('transfers')
+    .insert({
+      product_name: transfer.productName,
+      quantity: transfer.quantity,
+      from_location: transfer.fromLocation,
+      to_location: transfer.toLocation,
+      date: transfer.date,
+      status: transfer.status
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  // Transform to match our Transfer type
   const newTransfer: Transfer = {
-    ...transfer,
-    id: Math.max(...MOCK_TRANSFERS.map(t => t.id)) + 1,
+    id: data.id,
+    productName: data.product_name,
+    quantity: data.quantity,
+    fromLocation: data.from_location,
+    toLocation: data.to_location,
+    date: data.date,
+    status: data.status
   };
-  MOCK_TRANSFERS.push(newTransfer);
+  
   return newTransfer;
 };
 
 export const updateTransfer = async (id: number, updates: Partial<Transfer>) => {
-  await delay(500);
-  const index = MOCK_TRANSFERS.findIndex(t => t.id === id);
-  if (index === -1) throw new Error('Transfer not found');
+  const { data, error } = await supabase
+    .from('transfers')
+    .update({
+      product_name: updates.productName,
+      quantity: updates.quantity,
+      from_location: updates.fromLocation,
+      to_location: updates.toLocation,
+      date: updates.date,
+      status: updates.status
+    })
+    .eq('id', id)
+    .select()
+    .single();
   
-  MOCK_TRANSFERS[index] = {
-    ...MOCK_TRANSFERS[index],
-    ...updates,
+  if (error) throw error;
+  
+  // Transform to match our Transfer type
+  const updatedTransfer: Transfer = {
+    id: data.id,
+    productName: data.product_name,
+    quantity: data.quantity,
+    fromLocation: data.from_location,
+    toLocation: data.to_location,
+    date: data.date,
+    status: data.status
   };
   
-  return MOCK_TRANSFERS[index];
+  return updatedTransfer;
 };
 
 export const createVendor = async (vendor: Omit<Vendor, 'id'>) => {
-  await delay(500);
+  const { data, error } = await supabase
+    .from('vendors')
+    .insert({
+      name: vendor.name,
+      location: vendor.location,
+      phone: vendor.phone,
+      email: vendor.email
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  // Transform to match our Vendor type
   const newVendor: Vendor = {
-    ...vendor,
-    id: Math.max(...MOCK_VENDORS.map(v => v.id)) + 1,
+    id: data.id,
+    name: data.name,
+    location: data.location || "",
+    phone: data.phone || "",
+    email: data.email || ""
   };
-  MOCK_VENDORS.push(newVendor);
+  
   return newVendor;
 };
 
 export const updateVendor = async (id: number, updates: Partial<Vendor>) => {
-  await delay(500);
-  const index = MOCK_VENDORS.findIndex(v => v.id === id);
-  if (index === -1) throw new Error('Vendor not found');
+  const { data, error } = await supabase
+    .from('vendors')
+    .update({
+      name: updates.name,
+      location: updates.location,
+      phone: updates.phone,
+      email: updates.email
+    })
+    .eq('id', id)
+    .select()
+    .single();
   
-  MOCK_VENDORS[index] = {
-    ...MOCK_VENDORS[index],
-    ...updates,
+  if (error) throw error;
+  
+  // Transform to match our Vendor type
+  const updatedVendor: Vendor = {
+    id: data.id,
+    name: data.name,
+    location: data.location || "",
+    phone: data.phone || "",
+    email: data.email || ""
   };
   
-  return MOCK_VENDORS[index];
+  return updatedVendor;
 };
+
+// Create a stored procedure to update inventory quantity
+const createUpdateInventoryQuantityFunction = async () => {
+  const { error } = await supabase.rpc('create_update_inventory_quantity_function');
+  if (error) console.error("Error creating function:", error);
+};
+
+// Create the function if it doesn't exist
+createUpdateInventoryQuantityFunction();
