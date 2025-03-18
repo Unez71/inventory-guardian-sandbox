@@ -18,13 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, Edit, Trash, Eye } from "lucide-react";
-import { Product } from "@/types";
+import { InventoryItem } from "@/types";
 
 interface ProductTableProps {
-  products: Product[];
-  onEdit?: (product: Product) => void;
-  onDelete?: (product: Product) => void;
-  onView?: (product: Product) => void;
+  products: InventoryItem[];
+  onEdit?: (product: InventoryItem) => void;
+  onDelete?: (product: InventoryItem) => void;
+  onView?: (product: InventoryItem) => void;
 }
 
 const ProductTable = ({
@@ -39,8 +39,8 @@ const ProductTable = ({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead className="hidden md:table-cell">Stock</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead className="hidden md:table-cell">Quantity</TableHead>
             <TableHead className="hidden sm:table-cell">Price</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -58,8 +58,9 @@ const ProductTable = ({
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+                      {/* InventoryItem doesn't have image property, using placeholder */}
                       <img
-                        src={product.image || "/placeholder.svg"}
+                        src="/placeholder.svg"
                         alt={product.name}
                         className="h-8 w-8 object-contain"
                       />
@@ -69,19 +70,19 @@ const ProductTable = ({
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="bg-primary/5">
-                    {product.category.name}
+                    {product.location}
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   <Badge
-                    variant={product.stock <= 10 ? "destructive" : "secondary"}
+                    variant={product.quantity <= 10 ? "destructive" : "secondary"}
                     className="font-normal"
                   >
-                    {product.stock <= 10 ? "Low" : product.stock} in stock
+                    {product.quantity <= 10 ? "Low" : product.quantity} {product.unit}
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
-                  ${product.price.toFixed(2)}
+                  ₹{product.unitPrice.toFixed(2)}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
