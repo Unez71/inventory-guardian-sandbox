@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -30,15 +31,25 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
             onClick={toggleSidebar}
             aria-label="Toggle Menu"
           >
             {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
-          <span className="font-bold text-lg md:text-xl hidden md:inline-block">
-            Inventory Guardian
-          </span>
+          <Link to="/dashboard" className="font-bold text-lg md:text-xl inline-block">
+            BathStory
+          </Link>
+        </div>
+        
+        <div className="ml-4 hidden md:flex">
+          <nav className="flex space-x-4">
+            <Link to="/dashboard" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">Dashboard</Link>
+            <Link to="/inventory" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">Inventory</Link>
+            <Link to="/purchases" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">Purchases</Link>
+            <Link to="/sales" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">Sales</Link>
+            <Link to="/transfers" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">Transfers</Link>
+            <Link to="/vendors" className="px-3 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground">Vendors</Link>
+          </nav>
         </div>
         
         <div className="flex-1 flex justify-end items-center gap-2 md:gap-4">
@@ -97,7 +108,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Admin</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => logout()}>
                 Logout

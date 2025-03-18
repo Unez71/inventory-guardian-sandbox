@@ -3,63 +3,73 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatsCard from "@/components/StatsCard";
-import ProductTable from "@/components/ProductTable";
-import { fetchStats, fetchProducts } from "@/lib/api";
-import { Stats, Product } from "@/types";
-import { Package, Tag, Users, AlertTriangle } from "lucide-react";
+import { fetchStats, fetchSales, fetchPurchases, fetchTransfers } from "@/lib/api";
+import { Stats, Sale, Purchase, Transfer } from "@/types";
+import { Package, ShoppingCart, Tag, AlertTriangle } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 // Demo chart data
 const salesData = [
-  { date: "2023-01-01", value: 4000 },
-  { date: "2023-02-01", value: 3000 },
-  { date: "2023-03-01", value: 5000 },
-  { date: "2023-04-01", value: 2780 },
-  { date: "2023-05-01", value: 1890 },
-  { date: "2023-06-01", value: 2390 },
-  { date: "2023-07-01", value: 3490 },
-  { date: "2023-08-01", value: 2000 },
-  { date: "2023-09-01", value: 2780 },
-  { date: "2023-10-01", value: 3890 },
-  { date: "2023-11-01", value: 2390 },
-  { date: "2023-12-01", value: 3490 },
+  { date: "2023-01-01", value: 14000 },
+  { date: "2023-02-01", value: 10000 },
+  { date: "2023-03-01", value: 15000 },
+  { date: "2023-04-01", value: 9780 },
+  { date: "2023-05-01", value: 6890 },
+  { date: "2023-06-01", value: 8390 },
+  { date: "2023-07-01", value: 11490 },
+  { date: "2023-08-01", value: 7000 },
+  { date: "2023-09-01", value: 9780 },
+  { date: "2023-10-01", value: 12890 },
+  { date: "2023-11-01", value: 8390 },
+  { date: "2023-12-01", value: 11490 },
 ];
 
 const stockData = [
-  { date: "2023-01-01", value: 10000 },
-  { date: "2023-02-01", value: 11500 },
-  { date: "2023-03-01", value: 13000 },
-  { date: "2023-04-01", value: 12500 },
-  { date: "2023-05-01", value: 11000 },
-  { date: "2023-06-01", value: 9500 },
-  { date: "2023-07-01", value: 8800 },
-  { date: "2023-08-01", value: 9200 },
-  { date: "2023-09-01", value: 10600 },
-  { date: "2023-10-01", value: 12100 },
-  { date: "2023-11-01", value: 13500 },
-  { date: "2023-12-01", value: 15000 },
+  { date: "2023-01-01", value: 30000 },
+  { date: "2023-02-01", value: 35500 },
+  { date: "2023-03-01", value: 39000 },
+  { date: "2023-04-01", value: 36500 },
+  { date: "2023-05-01", value: 33000 },
+  { date: "2023-06-01", value: 28500 },
+  { date: "2023-07-01", value: 26800 },
+  { date: "2023-08-01", value: 27200 },
+  { date: "2023-09-01", value: 31600 },
+  { date: "2023-10-01", value: 36100 },
+  { date: "2023-11-01", value: 40500 },
+  { date: "2023-12-01", value: 45000 },
 ];
+
+const formatIndianRupee = (value: number) => {
+  return `₹${value.toLocaleString('en-IN')}`;
+};
 
 const Dashboard = () => {
   const { toast } = useToast();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [recentSales, setRecentSales] = useState<Sale[]>([]);
+  const [recentPurchases, setRecentPurchases] = useState<Purchase[]>([]);
+  const [recentTransfers, setRecentTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [statsData, productsData] = await Promise.all([
+        const [statsData, salesData, purchasesData, transfersData] = await Promise.all([
           fetchStats(),
-          fetchProducts(),
+          fetchSales(),
+          fetchPurchases(),
+          fetchTransfers(),
         ]);
         setStats(statsData);
-        setProducts(productsData);
+        setRecentSales(salesData.slice(0, 2));
+        setRecentPurchases(purchasesData.slice(0, 2));
+        setRecentTransfers(transfersData.slice(0, 2));
       } catch (error) {
         toast({
           variant: "destructive",
@@ -74,16 +84,22 @@ const Dashboard = () => {
     loadData();
   }, [toast]);
 
-  const lowStockProducts = products.filter((product) => product.stock <= 10);
-
   return (
     <PageTransition>
       <div className="flex flex-col gap-6 p-6 md:gap-8 md:p-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Overview of your inventory management system
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Overview of your inventory management system
+            </p>
+          </div>
+          <div className="relative inline-block">
+            <Button variant="outline" className="flex items-center gap-2">
+              All Locations
+              <span className="text-xs opacity-60">▼</span>
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -103,29 +119,29 @@ const Dashboard = () => {
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatsCard
-              title="Total Products"
-              value={stats?.totalProducts || 0}
-              icon={Package}
+              title="Total Sales"
+              value={formatIndianRupee(stats?.totalSales || 0)}
+              icon={Tag}
               trend="up"
               trendValue="12% from last month"
             />
             <StatsCard
-              title="Categories"
-              value={stats?.totalCategories || 0}
-              icon={Tag}
+              title="Total Purchases"
+              value={formatIndianRupee(stats?.totalPurchases || 0)}
+              icon={ShoppingCart}
               trend="neutral"
               trendValue="No change"
             />
             <StatsCard
-              title="Users"
-              value={stats?.totalUsers || 0}
-              icon={Users}
+              title="Total Inventory"
+              value={stats?.totalInventory?.toString() || "0"}
+              icon={Package}
               trend="up"
-              trendValue="2 new this month"
+              trendValue="15 new items"
             />
             <StatsCard
               title="Low Stock Items"
-              value={stats?.lowStockItems || 0}
+              value={stats?.lowStockItems?.toString() || "0"}
               icon={AlertTriangle}
               trend="down"
               trendValue="3 less than last week"
@@ -163,11 +179,11 @@ const Dashboard = () => {
                       tick={{ fontSize: 12 }}
                     />
                     <YAxis 
-                      tickFormatter={(value) => `$${value}`}
+                      tickFormatter={(value) => `₹${value/1000}k`}
                       tick={{ fontSize: 12 }}
                     />
                     <Tooltip
-                      formatter={(value) => [`$${value}`, 'Sales']}
+                      formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, 'Sales']}
                       labelFormatter={(date) => format(new Date(date), "MMMM yyyy")}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--background))',
@@ -210,11 +226,11 @@ const Dashboard = () => {
                       tick={{ fontSize: 12 }}
                     />
                     <YAxis 
-                      tickFormatter={(value) => `${value}`}
+                      tickFormatter={(value) => `${value/1000}k`}
                       tick={{ fontSize: 12 }}
                     />
                     <Tooltip
-                      formatter={(value) => [`${value} units`, 'Stock']}
+                      formatter={(value) => [`${value.toLocaleString('en-IN')} units`, 'Stock']}
                       labelFormatter={(date) => format(new Date(date), "MMMM yyyy")}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--background))',
@@ -235,18 +251,107 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">Low Stock Products</h2>
-            <Button variant="outline" size="sm">
-              View All
-            </Button>
-          </div>
-          {loading ? (
-            <Card className="h-52 w-full loading-skeleton" />
-          ) : (
-            <ProductTable products={lowStockProducts} />
-          )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Transfers</CardTitle>
+            </CardHeader>
+            <CardContent className="px-2">
+              <div className="space-y-4">
+                {recentTransfers.map((transfer) => (
+                  <div key={transfer.id} className="border rounded-lg p-3">
+                    <div className="flex justify-between">
+                      <div>
+                        <div className="font-medium">{transfer.productName}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {transfer.quantity} units from {transfer.fromLocation} to {transfer.toLocation}
+                        </div>
+                      </div>
+                      <div className={`px-2 py-1 rounded text-xs font-medium self-start ${
+                        transfer.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {transfer.status}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      {new Date(transfer.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <Link to="/transfers">
+                  <Button variant="outline" size="sm" className="w-full">
+                    View All Transfers
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Sales</CardTitle>
+            </CardHeader>
+            <CardContent className="px-2">
+              <div className="space-y-4">
+                {recentSales.map((sale) => (
+                  <div key={sale.id} className="border rounded-lg p-3">
+                    <div className="flex justify-between">
+                      <div>
+                        <div className="font-medium">{sale.customerName}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatIndianRupee(sale.totalAmount)} - {sale.location}
+                        </div>
+                      </div>
+                      <div className="text-sm text-right">
+                        {new Date(sale.date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <Link to="/sales">
+                  <Button variant="outline" size="sm" className="w-full">
+                    View All Sales
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-1">
+            <CardHeader>
+              <CardTitle className="text-lg">Recent Purchases</CardTitle>
+            </CardHeader>
+            <CardContent className="px-2">
+              <div className="space-y-4">
+                {recentPurchases.map((purchase) => (
+                  <div key={purchase.id} className="border rounded-lg p-3">
+                    <div className="flex justify-between">
+                      <div>
+                        <div className="font-medium">Invoice: {purchase.invoiceNumber}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatIndianRupee(purchase.totalAmount)} - {purchase.location}
+                        </div>
+                      </div>
+                      <div className="text-sm text-right">
+                        {new Date(purchase.date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4">
+                <Link to="/purchases">
+                  <Button variant="outline" size="sm" className="w-full">
+                    View All Purchases
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </PageTransition>

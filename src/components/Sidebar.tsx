@@ -1,14 +1,15 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Package, Tag, Users, Settings, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Package, Tag, ShoppingCart, Truck, Users, Settings, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SidebarProps {
   isOpen: boolean;
+  toggleSidebar: () => void;
 }
 
-const Sidebar = ({ isOpen }: SidebarProps) => {
+const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const location = useLocation();
   
   const links = [
@@ -18,18 +19,28 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       icon: <LayoutDashboard className="h-5 w-5" /> 
     },
     { 
-      href: "/products", 
-      label: "Products", 
+      href: "/inventory", 
+      label: "Inventory", 
       icon: <Package className="h-5 w-5" /> 
     },
     { 
-      href: "/categories", 
-      label: "Categories", 
+      href: "/purchases", 
+      label: "Purchases", 
+      icon: <ShoppingCart className="h-5 w-5" /> 
+    },
+    { 
+      href: "/sales", 
+      label: "Sales", 
       icon: <Tag className="h-5 w-5" /> 
     },
     { 
-      href: "/users", 
-      label: "Users", 
+      href: "/transfers", 
+      label: "Transfers", 
+      icon: <Truck className="h-5 w-5" /> 
+    },
+    { 
+      href: "/vendors", 
+      label: "Vendors", 
       icon: <Users className="h-5 w-5" /> 
     },
     { 
@@ -56,7 +67,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
       {isOpen && (
         <div 
           className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm md:hidden"
-          onClick={() => {}}
+          onClick={toggleSidebar}
         />
       )}
       
@@ -67,12 +78,12 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
         initial={false}
         className={cn(
           "fixed left-0 top-0 z-30 h-full flex-col border-r bg-sidebar text-sidebar-foreground md:w-60 md:translate-x-0 md:flex",
-          isOpen ? "flex w-60" : "hidden w-0 -translate-x-full",
+          isOpen ? "flex w-60" : "hidden w-0 -translate-x-full md:flex md:w-auto md:min-w-[60px] md:max-w-[60px]",
         )}
       >
         <div className="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <span className="font-bold text-xl">Inventory Guardian</span>
+            <span className="font-bold text-xl">BathStory</span>
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto py-4">
@@ -87,7 +98,10 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
                 )}
               >
                 {link.icon}
-                <span>{link.label}</span>
+                <span className={cn(
+                  "transition-opacity duration-200",
+                  !isOpen && "md:opacity-0"
+                )}>{link.label}</span>
               </Link>
             ))}
           </nav>
@@ -98,7 +112,10 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent"
           >
             <HelpCircle className="h-5 w-5" />
-            <span>Help & Support</span>
+            <span className={cn(
+              "transition-opacity duration-200",
+              !isOpen && "md:opacity-0"
+            )}>Help & Support</span>
           </Link>
         </div>
       </motion.aside>

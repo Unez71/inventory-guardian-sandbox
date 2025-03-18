@@ -10,14 +10,15 @@ import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products";
+import Inventory from "./pages/Inventory";
+import Purchases from "./pages/Purchases";
+import Sales from "./pages/Sales";
+import Transfers from "./pages/Transfers";
+import Vendors from "./pages/Vendors";
 import Categories from "./pages/Categories";
 import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
-
-// Import Framer Motion
-import { motion } from "framer-motion";
 
 const queryClient = new QueryClient();
 
@@ -44,13 +45,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+  
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       
       <div className="flex-1 overflow-auto">
         <Navbar 
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          toggleSidebar={toggleSidebar} 
           isSidebarOpen={sidebarOpen} 
         />
         <main className="min-h-[calc(100vh-4rem)]">
@@ -85,11 +90,55 @@ const App = () => (
             />
             
             <Route 
-              path="/products" 
+              path="/inventory" 
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <Products />
+                    <Inventory />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/purchases" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Purchases />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/sales" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Sales />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/transfers" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Transfers />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/vendors" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Vendors />
                   </Layout>
                 </ProtectedRoute>
               } 

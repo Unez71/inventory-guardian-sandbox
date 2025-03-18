@@ -1,5 +1,5 @@
 
-import { User, Product, Category, Stats } from '../types';
+import { User, Product, Category, Stats, InventoryItem, Purchase, Sale, Transfer, Vendor } from '../types';
 
 // Mock data for demo
 const MOCK_USERS: User[] = [
@@ -9,28 +9,155 @@ const MOCK_USERS: User[] = [
 ];
 
 const MOCK_CATEGORIES: Category[] = [
-  { id: 1, name: 'Electronics', description: 'Electronic devices and accessories', productsCount: 12, createdAt: '2023-01-15T10:00:00Z' },
-  { id: 2, name: 'Clothing', description: 'Apparel and fashion items', productsCount: 24, createdAt: '2023-01-20T14:30:00Z' },
-  { id: 3, name: 'Books', description: 'Books, e-books and publications', productsCount: 18, createdAt: '2023-02-05T09:15:00Z' },
-  { id: 4, name: 'Home & Garden', description: 'Home decoration and garden tools', productsCount: 15, createdAt: '2023-02-10T11:45:00Z' },
+  { id: 1, name: 'Glass Partitions', description: 'Partition systems for bathrooms', productsCount: 3, createdAt: '2023-01-15T10:00:00Z' },
+  { id: 2, name: 'Accessories', description: 'Bathroom fittings and accessories', productsCount: 1, createdAt: '2023-01-20T14:30:00Z' },
 ];
 
-const MOCK_PRODUCTS: Product[] = [
-  { id: 1, name: 'Smartphone XS', description: 'Latest model with advanced features', price: 699.99, stock: 25, category: MOCK_CATEGORIES[0], image: '/placeholder.svg', createdAt: '2023-03-01T08:00:00Z', updatedAt: '2023-03-10T15:30:00Z' },
-  { id: 2, name: 'Laptop Pro', description: 'Powerful laptop for professionals', price: 1299.99, stock: 10, category: MOCK_CATEGORIES[0], image: '/placeholder.svg', createdAt: '2023-03-02T09:30:00Z', updatedAt: '2023-03-12T11:00:00Z' },
-  { id: 3, name: 'Wireless Headphones', description: 'High-quality sound experience', price: 199.99, stock: 30, category: MOCK_CATEGORIES[0], image: '/placeholder.svg', createdAt: '2023-03-03T14:45:00Z', updatedAt: '2023-03-15T10:15:00Z' },
-  { id: 4, name: 'Casual T-shirt', description: 'Comfortable cotton t-shirt', price: 24.99, stock: 50, category: MOCK_CATEGORIES[1], image: '/placeholder.svg', createdAt: '2023-03-05T10:00:00Z', updatedAt: '2023-03-18T16:45:00Z' },
-  { id: 5, name: 'Designer Jeans', description: 'Premium denim jeans', price: 89.99, stock: 20, category: MOCK_CATEGORIES[1], image: '/placeholder.svg', createdAt: '2023-03-07T11:30:00Z', updatedAt: '2023-03-20T09:00:00Z' },
-  { id: 6, name: 'Science Fiction Novel', description: 'Bestselling sci-fi book', price: 19.99, stock: 40, category: MOCK_CATEGORIES[2], image: '/placeholder.svg', createdAt: '2023-03-08T13:15:00Z', updatedAt: '2023-03-22T14:30:00Z' },
-  { id: 7, name: 'Gardening Tool Set', description: 'Complete set for home gardening', price: 49.99, stock: 15, category: MOCK_CATEGORIES[3], image: '/placeholder.svg', createdAt: '2023-03-10T15:45:00Z', updatedAt: '2023-03-25T11:15:00Z' },
-  { id: 8, name: 'Smart Watch', description: 'Fitness tracking and notifications', price: 149.99, stock: 5, category: MOCK_CATEGORIES[0], image: '/placeholder.svg', createdAt: '2023-03-12T16:00:00Z', updatedAt: '2023-03-28T13:00:00Z' },
+const MOCK_INVENTORY: InventoryItem[] = [
+  { 
+    id: 1, 
+    name: 'Frameless Glass Partition', 
+    description: '10mm tempered glass with hardware', 
+    location: 'bangalore', 
+    quantity: 50, 
+    unit: 'pieces', 
+    unitPrice: 1200, 
+    inStock: true 
+  },
+  { 
+    id: 2, 
+    name: 'Framed Glass Partition', 
+    description: '8mm tempered glass with aluminum frame', 
+    location: 'hyderabad', 
+    quantity: 25, 
+    unit: 'pieces', 
+    unitPrice: 900, 
+    inStock: true 
+  },
+  { 
+    id: 3, 
+    name: 'Glass Hardware Kit', 
+    description: 'Complete hardware set for glass partitions', 
+    location: 'bangalore', 
+    quantity: 0, 
+    unit: 'sets', 
+    unitPrice: 500, 
+    inStock: false 
+  },
+  { 
+    id: 4, 
+    name: 'Rubber Gaskets', 
+    description: 'Rubber gaskets for glass partitions', 
+    location: 'hyderabad', 
+    quantity: 0, 
+    unit: 'meters', 
+    unitPrice: 100, 
+    inStock: false 
+  },
+];
+
+const MOCK_PURCHASES: Purchase[] = [
+  {
+    id: 1,
+    invoiceNumber: 'PUR-001',
+    date: '2024-01-15T00:00:00Z',
+    vendorId: 1,
+    location: 'bangalore',
+    totalAmount: 136000,
+    items: [
+      { productId: 1, productName: 'Frameless Glass Partition', quantity: 100, unitPrice: 800, total: 80000 },
+      { productId: 2, productName: 'Framed Glass Partition', quantity: 80, unitPrice: 700, total: 56000 }
+    ]
+  },
+  {
+    id: 2,
+    invoiceNumber: 'PUR-002',
+    date: '2024-01-20T00:00:00Z',
+    vendorId: 1,
+    location: 'hyderabad',
+    totalAmount: 106000,
+    items: [
+      { productId: 1, productName: 'Frameless Glass Partition', quantity: 80, unitPrice: 800, total: 64000 },
+      { productId: 2, productName: 'Framed Glass Partition', quantity: 60, unitPrice: 700, total: 42000 }
+    ]
+  }
+];
+
+const MOCK_SALES: Sale[] = [
+  {
+    id: 1,
+    invoiceNumber: 'INV-001',
+    date: '2024-02-05T00:00:00Z',
+    customerName: 'John Doe',
+    customerPhone: '1234567890',
+    location: 'bangalore',
+    totalAmount: 58500,
+    items: [
+      { productName: 'Frameless Glass Partition - 30 pieces @ ₹1200', quantity: 30, unitPrice: 1200 },
+      { productName: 'Framed Glass Partition - 25 pieces @ ₹900', quantity: 25, unitPrice: 900 }
+    ]
+  },
+  {
+    id: 2,
+    invoiceNumber: 'INV-002',
+    date: '2024-02-08T00:00:00Z',
+    customerName: 'Alice Johnson',
+    customerPhone: '5555555555',
+    location: 'hyderabad',
+    totalAmount: 60000,
+    items: [
+      { productName: 'Frameless Glass Partition - 35 pieces @ ₹1200', quantity: 35, unitPrice: 1200 },
+      { productName: 'Framed Glass Partition - 20 pieces @ ₹900', quantity: 20, unitPrice: 900 }
+    ]
+  }
+];
+
+const MOCK_TRANSFERS: Transfer[] = [
+  {
+    id: 1,
+    productName: 'Frameless Glass Partition',
+    quantity: 10,
+    fromLocation: 'bangalore',
+    toLocation: 'hyderabad',
+    date: '2025-03-18T00:00:00Z',
+    status: 'completed'
+  },
+  {
+    id: 2,
+    productName: 'Framed Glass Partition',
+    quantity: 5,
+    fromLocation: 'hyderabad',
+    toLocation: 'bangalore',
+    date: '2025-03-18T00:00:00Z',
+    status: 'pending'
+  }
+];
+
+const MOCK_VENDORS: Vendor[] = [
+  {
+    id: 1,
+    name: 'Glass Solutions Pvt Ltd',
+    location: 'Bangalore, Karnataka',
+    phone: '9876543210',
+    email: 'info@glasssolutions.com'
+  },
+  {
+    id: 2,
+    name: 'Aluminum Frames Co',
+    location: 'Hyderabad, Telangana',
+    phone: '9876543211',
+    email: 'info@aluminumframes.com'
+  }
 ];
 
 const MOCK_STATS: Stats = {
-  totalProducts: MOCK_PRODUCTS.length,
+  totalProducts: MOCK_INVENTORY.length,
   totalCategories: MOCK_CATEGORIES.length,
   totalUsers: MOCK_USERS.length,
-  lowStockItems: MOCK_PRODUCTS.filter(p => p.stock <= 10).length,
+  lowStockItems: MOCK_INVENTORY.filter(p => p.quantity <= 5).length,
+  totalSales: 118500,
+  totalPurchases: 242000,
+  totalInventory: 210
 };
 
 // Simulate API delay
@@ -63,9 +190,9 @@ export const fetchStats = async () => {
   return MOCK_STATS;
 };
 
-export const fetchProducts = async () => {
+export const fetchInventory = async () => {
   await delay(600);
-  return MOCK_PRODUCTS;
+  return MOCK_INVENTORY;
 };
 
 export const fetchCategories = async () => {
@@ -78,11 +205,31 @@ export const fetchUsers = async () => {
   return MOCK_USERS;
 };
 
-export const fetchProductById = async (id: number) => {
+export const fetchPurchases = async () => {
+  await delay(500);
+  return MOCK_PURCHASES;
+};
+
+export const fetchSales = async () => {
+  await delay(500);
+  return MOCK_SALES;
+};
+
+export const fetchTransfers = async () => {
+  await delay(400);
+  return MOCK_TRANSFERS;
+};
+
+export const fetchVendors = async () => {
+  await delay(400);
+  return MOCK_VENDORS;
+};
+
+export const fetchItemById = async (id: number) => {
   await delay(300);
-  const product = MOCK_PRODUCTS.find(p => p.id === id);
-  if (!product) throw new Error('Product not found');
-  return product;
+  const item = MOCK_INVENTORY.find(p => p.id === id);
+  if (!item) throw new Error('Item not found');
+  return item;
 };
 
 export const fetchCategoryById = async (id: number) => {
@@ -93,72 +240,100 @@ export const fetchCategoryById = async (id: number) => {
 };
 
 // Data mutation functions (these would connect to an API in a real app)
-export const createProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
+export const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
   await delay(800);
-  const newProduct: Product = {
-    ...product,
-    id: Math.max(...MOCK_PRODUCTS.map(p => p.id)) + 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+  const newItem: InventoryItem = {
+    ...item,
+    id: Math.max(...MOCK_INVENTORY.map(p => p.id)) + 1,
   };
-  MOCK_PRODUCTS.push(newProduct);
-  return newProduct;
+  MOCK_INVENTORY.push(newItem);
+  return newItem;
 };
 
-export const updateProduct = async (id: number, updates: Partial<Product>) => {
+export const updateInventoryItem = async (id: number, updates: Partial<InventoryItem>) => {
   await delay(800);
-  const index = MOCK_PRODUCTS.findIndex(p => p.id === id);
-  if (index === -1) throw new Error('Product not found');
+  const index = MOCK_INVENTORY.findIndex(p => p.id === id);
+  if (index === -1) throw new Error('Item not found');
   
-  MOCK_PRODUCTS[index] = {
-    ...MOCK_PRODUCTS[index],
+  MOCK_INVENTORY[index] = {
+    ...MOCK_INVENTORY[index],
     ...updates,
-    updatedAt: new Date().toISOString(),
   };
   
-  return MOCK_PRODUCTS[index];
+  return MOCK_INVENTORY[index];
 };
 
-export const deleteProduct = async (id: number) => {
+export const deleteInventoryItem = async (id: number) => {
   await delay(600);
-  const index = MOCK_PRODUCTS.findIndex(p => p.id === id);
-  if (index === -1) throw new Error('Product not found');
+  const index = MOCK_INVENTORY.findIndex(p => p.id === id);
+  if (index === -1) throw new Error('Item not found');
   
-  MOCK_PRODUCTS.splice(index, 1);
+  MOCK_INVENTORY.splice(index, 1);
   return { success: true };
 };
 
-export const createCategory = async (category: Omit<Category, 'id' | 'createdAt' | 'productsCount'>) => {
+export const createPurchase = async (purchase: Omit<Purchase, 'id'>) => {
   await delay(700);
-  const newCategory: Category = {
-    ...category,
-    id: Math.max(...MOCK_CATEGORIES.map(c => c.id)) + 1,
-    createdAt: new Date().toISOString(),
-    productsCount: 0,
+  const newPurchase: Purchase = {
+    ...purchase,
+    id: Math.max(...MOCK_PURCHASES.map(p => p.id)) + 1,
   };
-  MOCK_CATEGORIES.push(newCategory);
-  return newCategory;
+  MOCK_PURCHASES.push(newPurchase);
+  return newPurchase;
 };
 
-export const updateCategory = async (id: number, updates: Partial<Category>) => {
+export const createSale = async (sale: Omit<Sale, 'id'>) => {
   await delay(700);
-  const index = MOCK_CATEGORIES.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Category not found');
+  const newSale: Sale = {
+    ...sale,
+    id: Math.max(...MOCK_SALES.map(s => s.id)) + 1,
+  };
+  MOCK_SALES.push(newSale);
+  return newSale;
+};
+
+export const createTransfer = async (transfer: Omit<Transfer, 'id'>) => {
+  await delay(500);
+  const newTransfer: Transfer = {
+    ...transfer,
+    id: Math.max(...MOCK_TRANSFERS.map(t => t.id)) + 1,
+  };
+  MOCK_TRANSFERS.push(newTransfer);
+  return newTransfer;
+};
+
+export const updateTransfer = async (id: number, updates: Partial<Transfer>) => {
+  await delay(500);
+  const index = MOCK_TRANSFERS.findIndex(t => t.id === id);
+  if (index === -1) throw new Error('Transfer not found');
   
-  MOCK_CATEGORIES[index] = {
-    ...MOCK_CATEGORIES[index],
+  MOCK_TRANSFERS[index] = {
+    ...MOCK_TRANSFERS[index],
     ...updates,
   };
   
-  return MOCK_CATEGORIES[index];
+  return MOCK_TRANSFERS[index];
 };
 
-export const deleteCategory = async (id: number) => {
+export const createVendor = async (vendor: Omit<Vendor, 'id'>) => {
   await delay(500);
-  const index = MOCK_CATEGORIES.findIndex(c => c.id === id);
-  if (index === -1) throw new Error('Category not found');
+  const newVendor: Vendor = {
+    ...vendor,
+    id: Math.max(...MOCK_VENDORS.map(v => v.id)) + 1,
+  };
+  MOCK_VENDORS.push(newVendor);
+  return newVendor;
+};
+
+export const updateVendor = async (id: number, updates: Partial<Vendor>) => {
+  await delay(500);
+  const index = MOCK_VENDORS.findIndex(v => v.id === id);
+  if (index === -1) throw new Error('Vendor not found');
   
-  // In a real app, we'd check if the category has products first
-  MOCK_CATEGORIES.splice(index, 1);
-  return { success: true };
+  MOCK_VENDORS[index] = {
+    ...MOCK_VENDORS[index],
+    ...updates,
+  };
+  
+  return MOCK_VENDORS[index];
 };
