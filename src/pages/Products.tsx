@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { fetchProducts } from "@/lib/api";
-import { Product } from "@/types";
+import { fetchInventory } from "@/lib/api";
+import { InventoryItem } from "@/types";
 import ProductTable from "@/components/ProductTable";
 import PageTransition from "@/components/PageTransition";
 import { Button } from "@/components/ui/button";
@@ -29,19 +29,19 @@ import {
 
 const Products = () => {
   const { toast } = useToast();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const productsData = await fetchProducts();
-        setProducts(productsData);
+        const inventoryData = await fetchInventory();
+        setProducts(inventoryData);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -59,15 +59,15 @@ const Products = () => {
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    product.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: InventoryItem) => {
     setSelectedProduct(product);
     setEditDialogOpen(true);
   };
 
-  const handleDeleteProduct = (product: Product) => {
+  const handleDeleteProduct = (product: InventoryItem) => {
     setSelectedProduct(product);
     setDeleteDialogOpen(true);
   };
