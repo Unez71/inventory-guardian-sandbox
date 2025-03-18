@@ -1,6 +1,6 @@
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: 'admin' | 'user';
@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -22,7 +22,7 @@ export interface Product {
 }
 
 export interface InventoryItem {
-  id: number;
+  id: string;
   name: string;
   description: string;
   location: string;
@@ -33,7 +33,7 @@ export interface InventoryItem {
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
   description: string;
   productsCount: number;
@@ -41,17 +41,17 @@ export interface Category {
 }
 
 export interface Purchase {
-  id: number;
+  id: string;
   invoiceNumber: string;
   date: string;
-  vendorId: number;
+  vendorId: string;
   location: string;
   totalAmount: number;
   items: PurchaseItem[];
 }
 
 export interface PurchaseItem {
-  productId: number;
+  productId: string;
   productName: string;
   quantity: number;
   unitPrice: number;
@@ -59,7 +59,7 @@ export interface PurchaseItem {
 }
 
 export interface Sale {
-  id: number;
+  id: string;
   invoiceNumber: string;
   date: string;
   customerName: string;
@@ -76,7 +76,7 @@ export interface SaleItem {
 }
 
 export interface Transfer {
-  id: number;
+  id: string;
   productName: string;
   quantity: number;
   fromLocation: string;
@@ -86,7 +86,7 @@ export interface Transfer {
 }
 
 export interface Vendor {
-  id: number;
+  id: string;
   name: string;
   location: string;
   phone: string;

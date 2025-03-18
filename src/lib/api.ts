@@ -7,10 +7,10 @@ export const loginApi = async (username: string, password: string) => {
   // Simple validation for demo purposes
   if (username === 'admin' && password === 'password123') {
     const user = {
-      id: 1,
+      id: '1',
       username: 'admin',
       email: 'admin@example.com',
-      role: 'admin'
+      role: 'admin' as const
     };
     return {
       user,
@@ -23,6 +23,31 @@ export const loginApi = async (username: string, password: string) => {
 
 export const logoutApi = async () => {
   return { success: true };
+};
+
+// Mock function to fetch users since we don't have a users table yet
+export const fetchUsers = async (): Promise<User[]> => {
+  // For demo purposes, we'll return mock users
+  return [
+    {
+      id: '1',
+      username: 'admin',
+      email: 'admin@example.com',
+      role: 'admin'
+    },
+    {
+      id: '2',
+      username: 'manager',
+      email: 'manager@example.com',
+      role: 'user'
+    },
+    {
+      id: '3',
+      username: 'staff',
+      email: 'staff@example.com',
+      role: 'user'
+    }
+  ];
 };
 
 // Fetch data from Supabase
@@ -245,7 +270,7 @@ export const fetchStats = async () => {
   return stats;
 };
 
-export const fetchItemById = async (id: number) => {
+export const fetchItemById = async (id: string) => {
   const { data, error } = await supabase
     .from('inventory')
     .select('*')
@@ -269,7 +294,7 @@ export const fetchItemById = async (id: number) => {
   return item;
 };
 
-export const fetchCategoryById = async (id: number) => {
+export const fetchCategoryById = async (id: string) => {
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -329,7 +354,7 @@ export const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
   return newItem;
 };
 
-export const updateInventoryItem = async (id: number, updates: Partial<InventoryItem>) => {
+export const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
   const { data, error } = await supabase
     .from('inventory')
     .update({
@@ -362,7 +387,7 @@ export const updateInventoryItem = async (id: number, updates: Partial<Inventory
   return updatedItem;
 };
 
-export const deleteInventoryItem = async (id: number) => {
+export const deleteInventoryItem = async (id: string) => {
   const { error } = await supabase
     .from('inventory')
     .delete()
@@ -482,13 +507,13 @@ export const createTransfer = async (transfer: Omit<Transfer, 'id'>) => {
     fromLocation: data.from_location,
     toLocation: data.to_location,
     date: data.date,
-    status: data.status
+    status: data.status as 'completed' | 'pending'
   };
   
   return newTransfer;
 };
 
-export const updateTransfer = async (id: number, updates: Partial<Transfer>) => {
+export const updateTransfer = async (id: string, updates: Partial<Transfer>) => {
   const { data, error } = await supabase
     .from('transfers')
     .update({
@@ -513,7 +538,7 @@ export const updateTransfer = async (id: number, updates: Partial<Transfer>) => 
     fromLocation: data.from_location,
     toLocation: data.to_location,
     date: data.date,
-    status: data.status
+    status: data.status as 'completed' | 'pending'
   };
   
   return updatedTransfer;
@@ -545,7 +570,7 @@ export const createVendor = async (vendor: Omit<Vendor, 'id'>) => {
   return newVendor;
 };
 
-export const updateVendor = async (id: number, updates: Partial<Vendor>) => {
+export const updateVendor = async (id: string, updates: Partial<Vendor>) => {
   const { data, error } = await supabase
     .from('vendors')
     .update({

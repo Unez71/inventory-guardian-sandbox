@@ -287,7 +287,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_update_inventory_quantity_function: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_inventory_quantity: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
