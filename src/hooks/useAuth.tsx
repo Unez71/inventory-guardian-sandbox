@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { loginApi, logoutApi } from '@/lib/api';
+import { loginUser as loginApi } from '@/lib/api';
 import { AuthState, User } from '@/types';
 
 interface AuthContextType extends AuthState {
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       setState({ ...state, loading: true });
-      await logoutApi();
+      // We don't have a logoutApi function, so we'll just handle it client-side
       
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
