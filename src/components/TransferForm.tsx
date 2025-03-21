@@ -1,12 +1,12 @@
 
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { createTransfer } from "@/lib/api";
+import { createTransfer, fetchInventory } from "@/lib/api";
 import type { Transfer } from "@/types";
 
 interface TransferFormProps {
@@ -24,6 +24,24 @@ const TransferForm = ({ open, onOpenChange, onSuccess }: TransferFormProps) => {
     toLocation: "",
   });
   const [loading, setLoading] = useState(false);
+  const [locations, setLocations] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Fetch available locations from inventory
+    const fetchLocations = async () => {
+      try {
+        const inventoryData = await fetchInventory();
+        const uniqueLocations = [...new Set(inventoryData.map(item => item.location))];
+        setLocations(uniqueLocations);
+      } catch (error) {
+        console.error("Failed to fetch locations:", error);
+      }
+    };
+
+    if (open) {
+      fetchLocations();
+    }
+  }, [open]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -86,11 +104,9 @@ const TransferForm = ({ open, onOpenChange, onSuccess }: TransferFormProps) => {
     }
   };
 
-  const locations = ["Main Warehouse", "Store A", "Store B", "Production Unit"];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md glassmorphism">
         <DialogHeader>
           <DialogTitle>New Inventory Transfer</DialogTitle>
         </DialogHeader>
@@ -168,7 +184,7 @@ const TransferForm = ({ open, onOpenChange, onSuccess }: TransferFormProps) => {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
               {loading ? "Creating..." : "Create Transfer"}
             </Button>
           </DialogFooter>

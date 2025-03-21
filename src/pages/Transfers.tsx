@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import PageTransition from "@/components/PageTransition";
 import { fetchTransfers, updateTransfer } from "@/lib/api";
 import { Transfer } from "@/types";
-import { CalendarIcon, ArrowRightIcon, Plus } from "lucide-react";
+import { CalendarIcon, ArrowRightIcon, Plus, Filter } from "lucide-react";
 import LocationSelector from "@/components/LocationSelector";
 import TransferForm from "@/components/TransferForm";
 
@@ -86,6 +86,9 @@ const Transfers = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Inventory Transfers</h1>
+            <p className="text-muted-foreground">
+              Manage transfers between locations
+            </p>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-40 md:w-60">
@@ -118,7 +121,7 @@ const Transfers = () => {
               </Card>
             ) : (
               filteredTransfers.map((transfer) => (
-                <Card key={transfer.id} className="p-6">
+                <Card key={transfer.id} className="p-6 hover:shadow-md transition-shadow duration-200">
                   <div className="flex flex-col md:flex-row justify-between">
                     <div>
                       <h3 className="text-lg font-semibold">{transfer.productName}</h3>

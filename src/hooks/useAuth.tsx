@@ -1,46 +1,59 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { loginUser as loginApi } from '@/lib/api';
-import { AuthState, User } from '@/types';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { loginUser } from "@/lib/api";
 
-interface AuthContextType extends AuthState {
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+interface AuthState {
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    email: string;
+    username?: string;
+    role?: string;
+    avatar?: string;
+  } | null;
+  loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthContextProps extends AuthState {
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
 
-const TOKEN_KEY = 'inventory_auth_token';
-const USER_KEY = 'inventory_user';
+const AuthContext = createContext<AuthContextProps>({
+  isAuthenticated: false,
+  user: null,
+  loading: true,
+  login: async () => {},
+  logout: () => {},
+});
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const [state, setState] = useState<AuthState>({
-    user: null,
-    token: null,
     isAuthenticated: false,
+    user: null,
     loading: true,
   });
 
+  // Check for existing auth on mount
   useEffect(() => {
-    // Check for stored authentication on mount
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
+    const token = localStorage.getItem("auth_token");
+    const user = localStorage.getItem("auth_user");
     
-    if (storedToken && storedUser) {
+    if (token && user) {
       try {
-        const user = JSON.parse(storedUser) as User;
         setState({
-          user,
-          token: storedToken,
           isAuthenticated: true,
+          user: JSON.parse(user),
           loading: false,
         });
       } catch (error) {
-        // Invalid stored data, clean up
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("auth_user");
         setState({ ...state, loading: false });
       }
     } else {
@@ -48,63 +61,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     try {
-      setState({ ...state, loading: true });
-      const { user, token } = await loginApi(username, password);
+      const { user, token } = await loginUser(email, password);
       
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      // Store auth in localStorage
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("auth_user", JSON.stringify(user));
       
       setState({
-        user,
-        token,
         isAuthenticated: true,
+        user,
         loading: false,
       });
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${user.username}!`,
+        description: `Welcome back, ${user.username || user.email}!`,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to login';
+      const message = error instanceof Error ? error.message : "Failed to login";
       toast({
         variant: "destructive",
         title: "Login failed",
         description: message,
       });
-      setState({ ...state, loading: false });
+      throw error;
     }
   };
 
-  const logout = async () => {
-    try {
-      setState({ ...state, loading: true });
-      // We don't have a logoutApi function, so we'll just handle it client-side
-      
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-      
-      setState({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        loading: false,
-      });
-      
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to logout. Please try again.",
-      });
-      setState({ ...state, loading: false });
-    }
+  const logout = () => {
+    // Clear auth from localStorage
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
+    
+    setState({
+      isAuthenticated: false,
+      user: null,
+      loading: false,
+    });
+    
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
   };
 
   return (
@@ -112,12 +112,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
     email: "",
   });
   const [loading, setLoading] = useState(false);
+  const [vendorId, setVendorId] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -44,6 +45,9 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
     try {
       setLoading(true);
       const newVendor = await createVendor(formData);
+      
+      // Update the vendor ID
+      setVendorId(newVendor.id);
       
       toast({
         title: "Vendor Created",
@@ -71,7 +75,7 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md glassmorphism">
         <DialogHeader>
           <DialogTitle>Add New Vendor</DialogTitle>
         </DialogHeader>
@@ -86,6 +90,7 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
               onChange={handleChange}
               placeholder="Enter vendor name"
               required
+              className="focus-visible:ring-indigo-500"
             />
           </div>
           
@@ -97,6 +102,7 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
               value={formData.location}
               onChange={handleChange}
               placeholder="Enter vendor location"
+              className="focus-visible:ring-indigo-500"
             />
           </div>
           
@@ -108,6 +114,7 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
               value={formData.phone}
               onChange={handleChange}
               placeholder="Enter phone number"
+              className="focus-visible:ring-indigo-500"
             />
           </div>
           
@@ -120,8 +127,16 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
               value={formData.email}
               onChange={handleChange}
               placeholder="Enter email address"
+              className="focus-visible:ring-indigo-500"
             />
           </div>
+          
+          {vendorId && (
+            <div className="mt-2 text-sm border border-indigo-100 bg-indigo-50 p-3 rounded">
+              <span className="font-semibold">Vendor ID: </span>
+              <span className="font-mono">{vendorId}</span>
+            </div>
+          )}
           
           <DialogFooter className="pt-4">
             <Button
@@ -132,7 +147,7 @@ const VendorForm = ({ open, onOpenChange, onSuccess }: VendorFormProps) => {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white" disabled={loading}>
               {loading ? "Creating..." : "Create Vendor"}
             </Button>
           </DialogFooter>
