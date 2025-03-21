@@ -33,7 +33,7 @@ const Transfers = () => {
     loadTransfers();
   }, [toast]);
 
-  const handleCompleteTransfer = async (id: number) => {
+  const handleCompleteTransfer = async (id: string) => {
     try {
       const updatedTransfer = await updateTransfer(id, { status: 'completed' });
       setTransfers(transfers.map(transfer => 
