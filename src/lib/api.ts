@@ -41,7 +41,7 @@ export const createInventoryItem = async (item: Partial<InventoryItem>): Promise
       location: item.location,
       quantity: item.quantity || 0,
       unit: item.unit,
-      unit_price: item.unitPrice ? item.unitPrice.toString() : "0"
+      unit_price: item.unitPrice?.toString() || "0"
     })
     .select()
     .single();
