@@ -1,19 +1,22 @@
 
 import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MapPin, Filter } from "lucide-react";
+import { Search, Plus, Filter } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { fetchPurchases } from "@/lib/api";
 import { Purchase } from "@/types";
+import LocationSelector from "@/components/LocationSelector";
 
 const Purchases = () => {
   const { toast } = useToast();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [filteredPurchases, setFilteredPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("All Locations");
 
   useEffect(() => {
     const loadPurchases = async () => {
@@ -21,6 +24,7 @@ const Purchases = () => {
         setLoading(true);
         const data = await fetchPurchases();
         setPurchases(data);
+        setFilteredPurchases(data);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -35,14 +39,37 @@ const Purchases = () => {
     loadPurchases();
   }, [toast]);
 
-  const filteredPurchases = purchases.filter((purchase) =>
-    purchase.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    let filtered = purchases;
+    
+    // Apply location filter
+    if (selectedLocation !== "All Locations") {
+      filtered = filtered.filter(purchase => purchase.location === selectedLocation);
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        purchase => purchase.invoiceNumber.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredPurchases(filtered);
+  }, [purchases, searchQuery, selectedLocation]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleLocationChange = (location: string) => {
+    setSelectedLocation(location);
+  };
 
   // Calculate totals
-  const totalAmount = purchases.reduce((sum, purchase) => sum + purchase.totalAmount, 0);
-  const totalTransactions = purchases.length;
-  const averagePurchaseAmount = totalAmount / totalTransactions;
+  const totalAmount = filteredPurchases.reduce((sum, purchase) => sum + purchase.totalAmount, 0);
+  const totalTransactions = filteredPurchases.length;
+  const averagePurchaseAmount = totalTransactions > 0 ? totalAmount / totalTransactions : 0;
 
   return (
     <PageTransition>
@@ -56,11 +83,10 @@ const Purchases = () => {
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-40 md:w-60">
-              <Button variant="outline" className="flex items-center gap-2 w-full">
-                <MapPin className="h-4 w-4" />
-                All Locations
-                <span className="text-xs opacity-60">▼</span>
-              </Button>
+              <LocationSelector 
+                onChange={handleLocationChange} 
+                currentLocation={selectedLocation}
+              />
             </div>
             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
               <Plus className="h-4 w-4" />
@@ -76,7 +102,7 @@ const Purchases = () => {
               placeholder="Search by invoice number or vendor ID..."
               className="pl-10"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearch}
             />
           </div>
           <Button variant="outline" className="gap-2">
@@ -108,6 +134,10 @@ const Purchases = () => {
 
         {loading ? (
           <Card className="w-full h-96 loading-skeleton" />
+        ) : filteredPurchases.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground py-8">No purchases found for the selected criteria.</p>
+          </Card>
         ) : (
           <div className="space-y-6">
             {filteredPurchases.map((purchase) => (

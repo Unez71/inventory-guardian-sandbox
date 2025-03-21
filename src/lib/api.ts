@@ -1,489 +1,117 @@
 
-import { supabase } from "../integrations/supabase/client";
-import { User, Product, Category, Stats, InventoryItem, Purchase, Sale, Transfer, Vendor } from '../types';
+import { supabase } from "@/integrations/supabase/client";
+import { 
+  Category, 
+  Product, 
+  Transfer, 
+  Vendor, 
+  Sale, 
+  Purchase,
+  InventoryItem,
+  Stats,
+  User,
+} from "@/types";
 
-// Authentication functions
-export const loginApi = async (username: string, password: string) => {
-  // Simple validation for demo purposes
-  if (username === 'admin' && password === 'password123') {
-    const user = {
-      id: '1',
-      username: 'admin',
-      email: 'admin@example.com',
-      role: 'admin' as const
-    };
-    return {
-      user,
-      token: 'mock-jwt-token',
-    };
-  }
-  
-  throw new Error('Invalid credentials');
-};
-
-export const logoutApi = async () => {
-  return { success: true };
-};
-
-// Mock function to fetch users since we don't have a users table yet
-export const fetchUsers = async (): Promise<User[]> => {
-  // For demo purposes, we'll return mock users
-  return [
-    {
-      id: '1',
-      username: 'admin',
-      email: 'admin@example.com',
-      role: 'admin'
-    },
-    {
-      id: '2',
-      username: 'manager',
-      email: 'manager@example.com',
-      role: 'user'
-    },
-    {
-      id: '3',
-      username: 'staff',
-      email: 'staff@example.com',
-      role: 'user'
-    }
-  ];
-};
-
-// Fetch data from Supabase
-export const fetchCategories = async () => {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*');
-  
-  if (error) throw error;
-  
-  // Transform to match our Category type
-  const categories: Category[] = data.map(cat => ({
-    id: cat.id,
-    name: cat.name,
-    description: cat.description || "",
-    productsCount: 0, // We'll update this count below
-    createdAt: cat.created_at
-  }));
-
-  // Get product counts for each category
-  for (let category of categories) {
-    const { count, error: countError } = await supabase
-      .from('inventory')
-      .select('*', { count: 'exact', head: true })
-      .eq('category_id', category.id);
-    
-    if (!countError && count !== null) {
-      category.productsCount = count;
-    }
-  }
-  
-  return categories;
-};
-
-export const fetchInventory = async () => {
+// Inventory API
+export const fetchInventory = async (): Promise<InventoryItem[]> => {
   const { data, error } = await supabase
     .from('inventory')
     .select('*');
-  
+    
   if (error) throw error;
   
-  // Transform to match our InventoryItem type
-  const inventory: InventoryItem[] = data.map(item => ({
+  return data.map(item => ({
     id: item.id,
     name: item.name,
     description: item.description || "",
     location: item.location,
     quantity: item.quantity,
     unit: item.unit,
-    unitPrice: Number(item.unit_price),
-    inStock: item.quantity > 0
+    unitPrice: parseFloat(item.unit_price),
+    inStock: item.quantity > 0,
   }));
-  
-  return inventory;
 };
 
-export const fetchVendors = async () => {
-  const { data, error } = await supabase
-    .from('vendors')
-    .select('*');
-  
-  if (error) throw error;
-  
-  // Transform to match our Vendor type
-  const vendors: Vendor[] = data.map(vendor => ({
-    id: vendor.id,
-    name: vendor.name,
-    location: vendor.location || "",
-    phone: vendor.phone || "",
-    email: vendor.email || ""
-  }));
-  
-  return vendors;
-};
-
-export const fetchPurchases = async () => {
-  const { data, error } = await supabase
-    .from('purchases')
-    .select(`
-      *,
-      purchase_items(*)
-    `);
-  
-  if (error) throw error;
-  
-  // Transform to match our Purchase type
-  const purchases: Purchase[] = await Promise.all(data.map(async (purchase) => {
-    // Get product names for each purchase item
-    const purchaseItems = await Promise.all(purchase.purchase_items.map(async (item: any) => {
-      const { data: productData } = await supabase
-        .from('inventory')
-        .select('name')
-        .eq('id', item.product_id)
-        .single();
-      
-      return {
-        productId: item.product_id,
-        productName: productData?.name || "Unknown Product",
-        quantity: item.quantity,
-        unitPrice: Number(item.unit_price),
-        total: Number(item.total)
-      };
-    }));
-    
-    return {
-      id: purchase.id,
-      invoiceNumber: purchase.invoice_number,
-      date: purchase.date,
-      vendorId: purchase.vendor_id,
-      location: purchase.location,
-      totalAmount: Number(purchase.total_amount),
-      items: purchaseItems
-    };
-  }));
-  
-  return purchases;
-};
-
-export const fetchSales = async () => {
-  const { data, error } = await supabase
-    .from('sales')
-    .select(`
-      *,
-      sale_items(*)
-    `);
-  
-  if (error) throw error;
-  
-  // Transform to match our Sale type
-  const sales: Sale[] = data.map(sale => ({
-    id: sale.id,
-    invoiceNumber: sale.invoice_number,
-    date: sale.date,
-    customerName: sale.customer_name,
-    customerPhone: sale.customer_phone || "",
-    location: sale.location,
-    totalAmount: Number(sale.total_amount),
-    items: sale.sale_items.map((item: any) => ({
-      productName: item.product_name,
-      quantity: item.quantity,
-      unitPrice: Number(item.unit_price)
-    }))
-  }));
-  
-  return sales;
-};
-
-export const fetchTransfers = async () => {
-  const { data, error } = await supabase
-    .from('transfers')
-    .select('*');
-  
-  if (error) throw error;
-  
-  // Transform to match our Transfer type
-  const transfers: Transfer[] = data.map(transfer => ({
-    id: transfer.id,
-    productName: transfer.product_name,
-    quantity: transfer.quantity,
-    fromLocation: transfer.from_location,
-    toLocation: transfer.to_location,
-    date: transfer.date,
-    status: transfer.status as 'completed' | 'pending'
-  }));
-  
-  return transfers;
-};
-
-export const fetchStats = async () => {
-  // Get total products (inventory items)
-  const { count: totalProducts } = await supabase
-    .from('inventory')
-    .select('*', { count: 'exact', head: true });
-  
-  // Get total categories
-  const { count: totalCategories } = await supabase
-    .from('categories')
-    .select('*', { count: 'exact', head: true });
-  
-  // Get low stock items
-  const { count: lowStockItems } = await supabase
-    .from('inventory')
-    .select('*', { count: 'exact', head: true })
-    .lt('quantity', 6);
-  
-  // Get total sales amount
-  const { data: salesData } = await supabase
-    .from('sales')
-    .select('total_amount');
-  
-  const totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
-  
-  // Get total purchases amount
-  const { data: purchasesData } = await supabase
-    .from('purchases')
-    .select('total_amount');
-  
-  const totalPurchases = purchasesData?.reduce((sum, purchase) => sum + Number(purchase.total_amount), 0) || 0;
-  
-  // Get total inventory quantity
-  const { data: inventoryData } = await supabase
-    .from('inventory')
-    .select('quantity');
-  
-  const totalInventory = inventoryData?.reduce((sum, item) => sum + item.quantity, 0) || 0;
-  
-  // Mock data for users (we don't have a users table yet)
-  const totalUsers = 3;
-  
-  const stats: Stats = {
-    totalProducts: totalProducts || 0,
-    totalCategories: totalCategories || 0,
-    totalUsers,
-    lowStockItems: lowStockItems || 0,
-    totalSales,
-    totalPurchases,
-    totalInventory
-  };
-  
-  return stats;
-};
-
-export const fetchItemById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('inventory')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  
-  // Transform to match our InventoryItem type
-  const item: InventoryItem = {
-    id: data.id,
-    name: data.name,
-    description: data.description || "",
-    location: data.location,
-    quantity: data.quantity,
-    unit: data.unit,
-    unitPrice: Number(data.unit_price),
-    inStock: data.quantity > 0
-  };
-  
-  return item;
-};
-
-export const fetchCategoryById = async (id: string) => {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) throw error;
-  
-  // Get product count for this category
-  const { count, error: countError } = await supabase
-    .from('inventory')
-    .select('*', { count: 'exact', head: true })
-    .eq('category_id', data.id);
-  
-  // Transform to match our Category type
-  const category: Category = {
-    id: data.id,
-    name: data.name,
-    description: data.description || "",
-    productsCount: count || 0,
-    createdAt: data.created_at
-  };
-  
-  return category;
-};
-
-// Data mutation functions
-export const createInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
+export const createInventoryItem = async (item: Partial<InventoryItem>): Promise<InventoryItem> => {
   const { data, error } = await supabase
     .from('inventory')
     .insert({
       name: item.name,
       description: item.description,
       location: item.location,
-      quantity: item.quantity,
+      quantity: item.quantity || 0,
       unit: item.unit,
-      unit_price: item.unitPrice,
-      category_id: null // We would need the category_id here
+      unit_price: item.unitPrice
     })
     .select()
     .single();
-  
+    
   if (error) throw error;
   
-  // Transform to match our InventoryItem type
-  const newItem: InventoryItem = {
+  return {
     id: data.id,
     name: data.name,
     description: data.description || "",
     location: data.location,
     quantity: data.quantity,
     unit: data.unit,
-    unitPrice: Number(data.unit_price),
-    inStock: data.quantity > 0
+    unitPrice: parseFloat(data.unit_price),
+    inStock: data.quantity > 0,
   };
-  
-  return newItem;
 };
 
-export const updateInventoryItem = async (id: string, updates: Partial<InventoryItem>) => {
+export const updateInventoryItem = async (id: string, item: Partial<InventoryItem>): Promise<InventoryItem> => {
+  const updateData: any = {};
+  
+  if (item.name !== undefined) updateData.name = item.name;
+  if (item.description !== undefined) updateData.description = item.description;
+  if (item.location !== undefined) updateData.location = item.location;
+  if (item.quantity !== undefined) updateData.quantity = item.quantity;
+  if (item.unit !== undefined) updateData.unit = item.unit;
+  if (item.unitPrice !== undefined) updateData.unit_price = item.unitPrice;
+  
   const { data, error } = await supabase
     .from('inventory')
-    .update({
-      name: updates.name,
-      description: updates.description,
-      location: updates.location,
-      quantity: updates.quantity,
-      unit: updates.unit,
-      unit_price: updates.unitPrice,
-      updated_at: new Date().toISOString()
-    })
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
-  
+    
   if (error) throw error;
   
-  // Transform to match our InventoryItem type
-  const updatedItem: InventoryItem = {
+  return {
     id: data.id,
     name: data.name,
     description: data.description || "",
     location: data.location,
     quantity: data.quantity,
     unit: data.unit,
-    unitPrice: Number(data.unit_price),
-    inStock: data.quantity > 0
+    unitPrice: parseFloat(data.unit_price),
+    inStock: data.quantity > 0,
   };
-  
-  return updatedItem;
 };
 
-export const deleteInventoryItem = async (id: string) => {
-  const { error } = await supabase
-    .from('inventory')
-    .delete()
-    .eq('id', id);
-  
+// Transfers API
+export const fetchTransfers = async (): Promise<Transfer[]> => {
+  const { data, error } = await supabase
+    .from('transfers')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
   if (error) throw error;
   
-  return { success: true };
+  return data.map(transfer => ({
+    id: transfer.id,
+    productName: transfer.product_name,
+    quantity: transfer.quantity,
+    fromLocation: transfer.from_location,
+    toLocation: transfer.to_location,
+    date: transfer.date,
+    status: transfer.status as 'completed' | 'pending',
+  }));
 };
 
-export const createPurchase = async (purchase: Omit<Purchase, 'id'>) => {
-  // First, insert the purchase
-  const { data: purchaseData, error: purchaseError } = await supabase
-    .from('purchases')
-    .insert({
-      invoice_number: purchase.invoiceNumber,
-      date: purchase.date,
-      vendor_id: purchase.vendorId,
-      location: purchase.location,
-      total_amount: purchase.totalAmount
-    })
-    .select()
-    .single();
-  
-  if (purchaseError) throw purchaseError;
-  
-  // Then, insert each purchase item
-  for (const item of purchase.items) {
-    const { error: itemError } = await supabase
-      .from('purchase_items')
-      .insert({
-        purchase_id: purchaseData.id,
-        product_id: item.productId,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        total: item.total
-      });
-    
-    if (itemError) throw itemError;
-    
-    // Update inventory quantity
-    const { error: updateError } = await supabase.rpc('update_inventory_quantity', {
-      p_product_id: item.productId,
-      p_quantity: item.quantity
-    });
-    
-    if (updateError) throw updateError;
-  }
-  
-  return {
-    ...purchase,
-    id: purchaseData.id
-  };
-};
-
-export const createSale = async (sale: Omit<Sale, 'id'>) => {
-  // First, insert the sale
-  const { data: saleData, error: saleError } = await supabase
-    .from('sales')
-    .insert({
-      invoice_number: sale.invoiceNumber,
-      date: sale.date,
-      customer_name: sale.customerName,
-      customer_phone: sale.customerPhone,
-      location: sale.location,
-      total_amount: sale.totalAmount
-    })
-    .select()
-    .single();
-  
-  if (saleError) throw saleError;
-  
-  // Then, insert each sale item
-  for (const item of sale.items) {
-    const { error: itemError } = await supabase
-      .from('sale_items')
-      .insert({
-        sale_id: saleData.id,
-        product_name: item.productName,
-        quantity: item.quantity,
-        unit_price: item.unitPrice
-      });
-    
-    if (itemError) throw itemError;
-    
-    // Here we would normally update inventory quantity, but we need a product_id
-    // which we don't have in the current SaleItem type
-  }
-  
-  return {
-    ...sale,
-    id: saleData.id
-  };
-};
-
-export const createTransfer = async (transfer: Omit<Transfer, 'id'>) => {
+export const createTransfer = async (transfer: Partial<Transfer>): Promise<Transfer> => {
   const { data, error } = await supabase
     .from('transfers')
     .insert({
@@ -491,117 +119,244 @@ export const createTransfer = async (transfer: Omit<Transfer, 'id'>) => {
       quantity: transfer.quantity,
       from_location: transfer.fromLocation,
       to_location: transfer.toLocation,
-      date: transfer.date,
-      status: transfer.status
+      status: transfer.status || 'pending',
     })
     .select()
     .single();
-  
+    
   if (error) throw error;
   
-  // Transform to match our Transfer type
-  const newTransfer: Transfer = {
+  return {
     id: data.id,
     productName: data.product_name,
     quantity: data.quantity,
     fromLocation: data.from_location,
     toLocation: data.to_location,
     date: data.date,
-    status: data.status as 'completed' | 'pending'
+    status: data.status as 'completed' | 'pending',
   };
-  
-  return newTransfer;
 };
 
-export const updateTransfer = async (id: string, updates: Partial<Transfer>) => {
+export const updateTransfer = async (id: string, transfer: Partial<Transfer>): Promise<Transfer> => {
+  const updateData: any = {};
+  
+  if (transfer.productName !== undefined) updateData.product_name = transfer.productName;
+  if (transfer.quantity !== undefined) updateData.quantity = transfer.quantity;
+  if (transfer.fromLocation !== undefined) updateData.from_location = transfer.fromLocation;
+  if (transfer.toLocation !== undefined) updateData.to_location = transfer.toLocation;
+  if (transfer.status !== undefined) updateData.status = transfer.status;
+  
   const { data, error } = await supabase
     .from('transfers')
-    .update({
-      product_name: updates.productName,
-      quantity: updates.quantity,
-      from_location: updates.fromLocation,
-      to_location: updates.toLocation,
-      date: updates.date,
-      status: updates.status
-    })
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
-  
+    
   if (error) throw error;
   
-  // Transform to match our Transfer type
-  const updatedTransfer: Transfer = {
+  return {
     id: data.id,
     productName: data.product_name,
     quantity: data.quantity,
     fromLocation: data.from_location,
     toLocation: data.to_location,
     date: data.date,
-    status: data.status as 'completed' | 'pending'
+    status: data.status as 'completed' | 'pending',
   };
-  
-  return updatedTransfer;
 };
 
-export const createVendor = async (vendor: Omit<Vendor, 'id'>) => {
+// Vendors API
+export const fetchVendors = async (): Promise<Vendor[]> => {
+  const { data, error } = await supabase
+    .from('vendors')
+    .select('*')
+    .order('created_at', { ascending: false });
+    
+  if (error) throw error;
+  
+  return data.map(vendor => ({
+    id: vendor.id,
+    name: vendor.name,
+    location: vendor.location,
+    phone: vendor.phone,
+    email: vendor.email,
+  }));
+};
+
+export const createVendor = async (vendor: Partial<Vendor>): Promise<Vendor> => {
   const { data, error } = await supabase
     .from('vendors')
     .insert({
       name: vendor.name,
       location: vendor.location,
       phone: vendor.phone,
-      email: vendor.email
+      email: vendor.email,
     })
     .select()
     .single();
-  
+    
   if (error) throw error;
   
-  // Transform to match our Vendor type
-  const newVendor: Vendor = {
+  return {
     id: data.id,
     name: data.name,
-    location: data.location || "",
-    phone: data.phone || "",
-    email: data.email || ""
+    location: data.location,
+    phone: data.phone,
+    email: data.email,
   };
-  
-  return newVendor;
 };
 
-export const updateVendor = async (id: string, updates: Partial<Vendor>) => {
+export const updateVendor = async (id: string, vendor: Partial<Vendor>): Promise<Vendor> => {
+  const updateData: any = {};
+  
+  if (vendor.name !== undefined) updateData.name = vendor.name;
+  if (vendor.location !== undefined) updateData.location = vendor.location;
+  if (vendor.phone !== undefined) updateData.phone = vendor.phone;
+  if (vendor.email !== undefined) updateData.email = vendor.email;
+  
   const { data, error } = await supabase
     .from('vendors')
-    .update({
-      name: updates.name,
-      location: updates.location,
-      phone: updates.phone,
-      email: updates.email
-    })
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();
-  
+    
   if (error) throw error;
   
-  // Transform to match our Vendor type
-  const updatedVendor: Vendor = {
+  return {
     id: data.id,
     name: data.name,
-    location: data.location || "",
-    phone: data.phone || "",
-    email: data.email || ""
+    location: data.location,
+    phone: data.phone,
+    email: data.email,
   };
+};
+
+// Sales API
+export const fetchSales = async (): Promise<Sale[]> => {
+  const { data, error } = await supabase
+    .from('sales')
+    .select(`
+      *,
+      sale_items (*)
+    `)
+    .order('created_at', { ascending: false });
+    
+  if (error) throw error;
   
-  return updatedVendor;
+  return data.map(sale => ({
+    id: sale.id,
+    invoiceNumber: sale.invoice_number,
+    date: sale.date,
+    customerName: sale.customer_name,
+    customerPhone: sale.customer_phone,
+    location: sale.location,
+    totalAmount: parseFloat(sale.total_amount),
+    items: sale.sale_items.map((item: any) => ({
+      productName: item.product_name,
+      quantity: item.quantity,
+      unitPrice: parseFloat(item.unit_price),
+    })),
+  }));
 };
 
-// Create a stored procedure to update inventory quantity
-const createUpdateInventoryQuantityFunction = async () => {
-  const { error } = await supabase.rpc('create_update_inventory_quantity_function');
-  if (error) console.error("Error creating function:", error);
+// Purchases API
+export const fetchPurchases = async (): Promise<Purchase[]> => {
+  const { data, error } = await supabase
+    .from('purchases')
+    .select(`
+      *,
+      purchase_items (*)
+    `)
+    .order('created_at', { ascending: false });
+    
+  if (error) throw error;
+  
+  return data.map(purchase => ({
+    id: purchase.id,
+    invoiceNumber: purchase.invoice_number,
+    date: purchase.date,
+    vendorId: purchase.vendor_id,
+    location: purchase.location,
+    totalAmount: parseFloat(purchase.total_amount),
+    items: purchase.purchase_items.map((item: any) => ({
+      productId: item.product_id,
+      productName: item.product_name || "Product",
+      quantity: item.quantity,
+      unitPrice: parseFloat(item.unit_price),
+      total: parseFloat(item.total),
+    })),
+  }));
 };
 
-// Create the function if it doesn't exist
-createUpdateInventoryQuantityFunction();
+// Categories API
+export const fetchCategories = async (): Promise<Category[]> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*');
+    
+  if (error) throw error;
+  
+  return data.map(category => ({
+    id: category.id,
+    name: category.name,
+    description: category.description || "",
+    productsCount: 0, // We would need a join or separate query to get this
+    createdAt: category.created_at,
+  }));
+};
+
+// Users API
+export const fetchUsers = async (): Promise<User[]> => {
+  // In a real app, this would be a call to get users from the auth system
+  // For this demo, returning mock data
+  return [
+    {
+      id: "1",
+      username: "admin",
+      email: "admin@example.com",
+      role: "admin",
+      avatar: ""
+    },
+    {
+      id: "2",
+      username: "user1",
+      email: "user1@example.com",
+      role: "user",
+      avatar: ""
+    }
+  ];
+};
+
+// Mock authentication
+export const loginUser = async (email: string, password: string): Promise<{ user: User; token: string }> => {
+  // In a real app, this would be a call to authenticate the user
+  if (email === "admin@example.com" && password === "password") {
+    return {
+      user: {
+        id: "1",
+        username: "admin",
+        email: "admin@example.com",
+        role: "admin",
+        avatar: ""
+      },
+      token: "mock-token-12345"
+    };
+  }
+  throw new Error("Invalid credentials");
+};
+
+// Function to get dashboard stats
+export const fetchStats = async (): Promise<Stats> => {
+  // In a real app, this would fetch actual stats
+  return {
+    totalProducts: 148,
+    totalCategories: 12,
+    totalUsers: 8,
+    lowStockItems: 23,
+    totalSales: 45600,
+    totalPurchases: 36200,
+    totalInventory: 256
+  };
+};

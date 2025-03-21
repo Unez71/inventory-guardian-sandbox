@@ -1,19 +1,22 @@
 
 import { useEffect, useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, MapPin, Filter, User, Phone, Calendar } from "lucide-react";
+import { Search, Plus, Filter, User, Phone, Calendar } from "lucide-react";
 import PageTransition from "@/components/PageTransition";
 import { fetchSales } from "@/lib/api";
 import { Sale } from "@/types";
+import LocationSelector from "@/components/LocationSelector";
 
 const Sales = () => {
   const { toast } = useToast();
   const [sales, setSales] = useState<Sale[]>([]);
+  const [filteredSales, setFilteredSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("All Locations");
 
   useEffect(() => {
     const loadSales = async () => {
@@ -21,6 +24,7 @@ const Sales = () => {
         setLoading(true);
         const data = await fetchSales();
         setSales(data);
+        setFilteredSales(data);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -35,17 +39,40 @@ const Sales = () => {
     loadSales();
   }, [toast]);
 
-  const filteredSales = sales.filter(
-    (sale) =>
-      sale.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sale.customerPhone.includes(searchQuery) ||
-      sale.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    let filtered = sales;
+    
+    // Apply location filter
+    if (selectedLocation !== "All Locations") {
+      filtered = filtered.filter(sale => sale.location === selectedLocation);
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (sale) =>
+          sale.customerName.toLowerCase().includes(query) ||
+          sale.customerPhone?.includes(query) ||
+          sale.invoiceNumber.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredSales(filtered);
+  }, [sales, searchQuery, selectedLocation]);
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleLocationChange = (location: string) => {
+    setSelectedLocation(location);
+  };
 
   // Calculate totals
-  const totalAmount = sales.reduce((sum, sale) => sum + sale.totalAmount, 0);
-  const totalTransactions = sales.length;
-  const averageSaleAmount = totalAmount / totalTransactions || 0;
+  const totalAmount = filteredSales.reduce((sum, sale) => sum + sale.totalAmount, 0);
+  const totalTransactions = filteredSales.length;
+  const averageSaleAmount = totalTransactions > 0 ? totalAmount / totalTransactions : 0;
 
   return (
     <PageTransition>
@@ -59,11 +86,10 @@ const Sales = () => {
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative w-full sm:w-40 md:w-60">
-              <Button variant="outline" className="flex items-center gap-2 w-full">
-                <MapPin className="h-4 w-4" />
-                All Locations
-                <span className="text-xs opacity-60">▼</span>
-              </Button>
+              <LocationSelector 
+                onChange={handleLocationChange} 
+                currentLocation={selectedLocation}
+              />
             </div>
             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
               <Plus className="h-4 w-4" />
@@ -79,7 +105,7 @@ const Sales = () => {
               placeholder="Search by customer name, contact, or invoice number..."
               className="pl-10"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearch}
             />
           </div>
           <Button variant="outline" className="gap-2">
@@ -111,6 +137,10 @@ const Sales = () => {
 
         {loading ? (
           <Card className="w-full h-96 loading-skeleton" />
+        ) : filteredSales.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground py-8">No sales found for the selected criteria.</p>
+          </Card>
         ) : (
           <div className="space-y-4">
             {filteredSales.map((sale) => (

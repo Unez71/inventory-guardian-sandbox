@@ -77,7 +77,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
         animate={isOpen ? 'open' : 'closed'}
         initial={false}
         className={cn(
-          "fixed left-0 top-0 z-20 h-full flex-col border-r bg-sidebar text-sidebar-foreground",
+          "fixed left-0 top-0 z-40 h-full flex-col border-r bg-sidebar text-sidebar-foreground transition-all",
           isOpen ? "flex w-60" : "hidden w-0 md:flex md:w-[60px]",
         )}
       >
@@ -96,6 +96,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                   "group flex items-center gap-3 rounded-lg px-3 py-2 text-sidebar-foreground transition-all hover:bg-sidebar-accent",
                   location.pathname === link.href && "bg-sidebar-accent font-medium"
                 )}
+                onClick={() => window.innerWidth < 768 ? toggleSidebar() : null}
               >
                 {link.icon}
                 <span className={cn(
