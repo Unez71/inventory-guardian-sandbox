@@ -11,8 +11,6 @@ import { Plus, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -26,41 +24,57 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import ProductForm from "@/components/ProductForm";
+import LocationSelector from "@/components/LocationSelector";
 
 const Products = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<InventoryItem | null>(null);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const inventoryData = await fetchInventory();
-        setProducts(inventoryData);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load products",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const inventoryData = await fetchInventory();
+      setProducts(inventoryData);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load products",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadData();
   }, [toast]);
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    // Check location filter
+    if (selectedLocation !== "All Locations" && product.location !== selectedLocation) {
+      return false;
+    }
+    
+    // Check search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        product.name.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query) ||
+        product.location.toLowerCase().includes(query)
+      );
+    }
+    
+    return true;
+  });
 
   const handleEditProduct = (product: InventoryItem) => {
     setSelectedProduct(product);
@@ -72,18 +86,40 @@ const Products = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedProduct) {
-      // In a real app, we would call the API to delete the product
-      // For this demo, we'll just update the local state
-      setProducts(products.filter((p) => p.id !== selectedProduct.id));
-      toast({
-        title: "Product deleted",
-        description: `${selectedProduct.name} has been removed.`,
-      });
+      try {
+        // In a real app, we would call the API to delete the product
+        // For this demo, we'll just update the local state
+        setProducts(products.filter((p) => p.id !== selectedProduct.id));
+        toast({
+          title: "Product deleted",
+          description: `${selectedProduct.name} has been removed.`,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete the product",
+        });
+      }
     }
     setDeleteDialogOpen(false);
     setSelectedProduct(null);
+  };
+
+  const handleAddProduct = () => {
+    setSelectedProduct(null);
+    setEditDialogOpen(true);
+  };
+
+  const handleFormSuccess = () => {
+    setEditDialogOpen(false);
+    loadData();
+  };
+
+  const handleLocationChange = (location: string) => {
+    setSelectedLocation(location);
   };
 
   return (
@@ -96,10 +132,17 @@ const Products = () => {
               Manage your product inventory
             </p>
           </div>
-          <Button className="hover-lift">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <LocationSelector 
+              onChange={handleLocationChange}
+              currentLocation={selectedLocation}
+              className="w-full sm:w-48"
+            />
+            <Button className="hover-lift" onClick={handleAddProduct}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Product
+            </Button>
+          </div>
         </div>
 
         <div className="relative max-w-md">
@@ -124,29 +167,19 @@ const Products = () => {
         )}
       </div>
 
-      {/* Edit Product Dialog - This would have a form in a real app */}
+      {/* Edit Product Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-lg glassmorphism">
           <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
-            <DialogDescription>
-              Make changes to the product information.
-            </DialogDescription>
+            <DialogTitle>
+              {selectedProduct ? "Edit Product" : "Add New Product"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <p>
-              This would contain a form to edit{" "}
-              <span className="font-semibold">{selectedProduct?.name}</span>.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={() => setEditDialogOpen(false)}>
-              Save Changes
-            </Button>
-          </DialogFooter>
+          <ProductForm
+            initialData={selectedProduct || undefined}
+            onSuccess={handleFormSuccess}
+            onCancel={() => setEditDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 

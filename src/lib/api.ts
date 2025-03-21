@@ -41,7 +41,7 @@ export const createInventoryItem = async (item: Partial<InventoryItem>): Promise
       location: item.location,
       quantity: item.quantity || 0,
       unit: item.unit,
-      unit_price: item.unitPrice
+      unit_price: item.unitPrice?.toString()
     })
     .select()
     .single();
@@ -68,7 +68,7 @@ export const updateInventoryItem = async (id: string, item: Partial<InventoryIte
   if (item.location !== undefined) updateData.location = item.location;
   if (item.quantity !== undefined) updateData.quantity = item.quantity;
   if (item.unit !== undefined) updateData.unit = item.unit;
-  if (item.unitPrice !== undefined) updateData.unit_price = item.unitPrice;
+  if (item.unitPrice !== undefined) updateData.unit_price = item.unitPrice.toString();
   
   const { data, error } = await supabase
     .from('inventory')

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
 import {
@@ -8,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { fetchInventory } from "@/lib/api";
 
 interface LocationSelectorProps {
   onChange: (location: string) => void;
@@ -18,11 +18,37 @@ interface LocationSelectorProps {
 
 const LocationSelector = ({ 
   onChange, 
-  locations = ["All Locations", "Main Warehouse", "Store A", "Store B", "Production Unit"],
+  locations: propLocations,
   currentLocation = "All Locations",
   className
 }: LocationSelectorProps) => {
   const [selected, setSelected] = useState(currentLocation);
+  const [locations, setLocations] = useState<string[]>(propLocations || ["All Locations"]);
+
+  useEffect(() => {
+    // If locations are provided as props, use them
+    if (propLocations) {
+      return;
+    }
+    
+    // Otherwise, fetch locations from inventory items
+    const fetchLocations = async () => {
+      try {
+        const inventoryData = await fetchInventory();
+        const uniqueLocations = [...new Set(inventoryData.map(item => item.location))];
+        setLocations(["All Locations", ...uniqueLocations]);
+      } catch (error) {
+        console.error("Failed to fetch locations:", error);
+      }
+    };
+    
+    fetchLocations();
+  }, [propLocations]);
+
+  // Update selected value when currentLocation prop changes
+  useEffect(() => {
+    setSelected(currentLocation);
+  }, [currentLocation]);
 
   const handleLocationChange = (location: string) => {
     setSelected(location);

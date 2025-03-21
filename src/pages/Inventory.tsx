@@ -6,10 +6,17 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import PageTransition from "@/components/PageTransition";
 import { fetchInventory } from "@/lib/api";
 import { InventoryItem } from "@/types";
 import LocationSelector from "@/components/LocationSelector";
+import ProductForm from "@/components/ProductForm";
 
 const Inventory = () => {
   const { toast } = useToast();
@@ -18,25 +25,27 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryItem | undefined>(undefined);
+
+  const loadInventory = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchInventory();
+      setInventory(data);
+      setFilteredInventory(data);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load inventory data",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadInventory = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchInventory();
-        setInventory(data);
-        setFilteredInventory(data);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load inventory data",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadInventory();
   }, [toast]);
 
@@ -69,6 +78,34 @@ const Inventory = () => {
     setSelectedLocation(location);
   };
 
+  const handleAddProduct = () => {
+    setSelectedProduct(undefined);
+    setFormDialogOpen(true);
+  };
+
+  const handleEditProduct = (product: InventoryItem) => {
+    setSelectedProduct(product);
+    setFormDialogOpen(true);
+  };
+
+  const handleFormSuccess = () => {
+    setFormDialogOpen(false);
+    loadInventory();
+  };
+
+  const handleViewDetails = (item: InventoryItem) => {
+    setSelectedProduct(item);
+    setFormDialogOpen(true);
+  };
+
+  const handleAddStock = (item: InventoryItem) => {
+    setSelectedProduct({
+      ...item,
+      quantity: item.quantity + 10 // Default add 10 items
+    });
+    setFormDialogOpen(true);
+  };
+
   return (
     <PageTransition>
       <div className="flex flex-col gap-6 p-6 md:gap-8 md:p-8">
@@ -86,7 +123,10 @@ const Inventory = () => {
                 currentLocation={selectedLocation}
               />
             </div>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2">
+            <Button 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
+              onClick={handleAddProduct}
+            >
               <Plus className="h-4 w-4" />
               New Product
             </Button>
@@ -146,10 +186,18 @@ const Inventory = () => {
                   </div>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <Button variant="default" className="flex-1">
+                  <Button 
+                    variant="default" 
+                    className="flex-1"
+                    onClick={() => handleViewDetails(item)}
+                  >
                     View Details
                   </Button>
-                  <Button variant="outline" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleAddStock(item)}
+                  >
                     Add Stock
                   </Button>
                 </div>
@@ -158,6 +206,21 @@ const Inventory = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
+        <DialogContent className="sm:max-w-lg glassmorphism">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedProduct ? "Edit Product" : "Add New Product"}
+            </DialogTitle>
+          </DialogHeader>
+          <ProductForm
+            initialData={selectedProduct}
+            onSuccess={handleFormSuccess}
+            onCancel={() => setFormDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </PageTransition>
   );
 };
