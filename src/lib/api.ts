@@ -332,7 +332,8 @@ export const fetchUsers = async (): Promise<User[]> => {
 // Mock authentication
 export const loginUser = async (email: string, password: string): Promise<{ user: User; token: string }> => {
   // In a real app, this would be a call to authenticate the user
-  if (email === "admin@example.com" && password === "password") {
+  // Use both admin or admin@example.com as valid usernames
+  if ((email === "admin@example.com" || email === "admin") && (password === "password" || password === "password123")) {
     return {
       user: {
         id: "1",
